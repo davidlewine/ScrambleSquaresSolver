@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package scrambles;
+//an additional comment
 
 import java.util.*;
 import java.io.*;
