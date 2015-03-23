@@ -31,7 +31,7 @@ public class Edge {
     public Edge(BufferedImage img, double[] ca, double[] cb, int id){
         cornerA = ca;
         cornerB = cb;
-        idNum = id;
+        idNum = id;//0-3 with 0 = top edge of square and going clockwise
         double numPoints = Math.sqrt(Math.pow((cornerA[0] - cornerB[0]),2) + Math.pow((cornerA[1] - cornerB[1]),2));
         double dx = (cornerB[0] - cornerA[0])/numPoints;
         double dy = (cornerB[1] - cornerA[1])/numPoints;
@@ -46,7 +46,7 @@ public class Edge {
     }
     
     private RegionOI getRoi(BufferedImage img){
-        double a = 1.3, b = 4;
+        double a = 2, b = 5, offset = 2;
         double c = 2*a;
         int tlx, tly, w, h;
         BufferedImage roiImg;
@@ -54,7 +54,7 @@ public class Edge {
             w = (int)(Math.abs(cornerA[0] - cornerB[0])/a);
             h = (int)(Math.abs(cornerA[0] - cornerB[0])/b);
             tlx = (int)((cornerA[0] + cornerB[0])/2 - (Math.abs(cornerA[0] - cornerB[0])/c));//tlx = top left x.
-            tly = (int)((cornerA[1] + cornerB[1])/2); 
+            tly = (int)((cornerA[1] + cornerB[1])/2 + offset); 
             roiImg = img.getSubimage(tlx, tly, w, h);
             
         }
@@ -62,7 +62,7 @@ public class Edge {
             w = (int)(Math.abs(cornerA[1] - cornerB[1])/b);
             h = (int)(Math.abs(cornerA[1] - cornerB[1])/a);
             tly = (int)((cornerA[1] + cornerB[1])/2 - (Math.abs(cornerA[1] - cornerB[1])/c));
-            tlx = (int)((cornerA[0] + cornerB[0])/2 - w);  
+            tlx = (int)((cornerA[0] + cornerB[0])/2 - (w + offset));  
             BufferedImage tempRoiImg = img.getSubimage(tlx, tly, w, h);
             roiImg = new BufferedImage(tempRoiImg.getHeight(), tempRoiImg.getWidth(), tempRoiImg.getType());
             for(int i = 0;i <tempRoiImg.getWidth(); i++ ){
@@ -76,7 +76,7 @@ public class Edge {
             w = (int)(Math.abs(cornerA[0] - cornerB[0])/a);
             h = (int)(Math.abs(cornerA[0] - cornerB[0])/b);
             tlx = (int)((cornerA[0] + cornerB[0])/2 - (Math.abs(cornerA[0] - cornerB[0])/c));
-            tly = (int)((cornerA[1] + cornerB[1])/2 - h);
+            tly = (int)((cornerA[1] + cornerB[1])/2 - (h + offset));
             BufferedImage tempRoiImg = img.getSubimage(tlx, tly, w, h);
             roiImg = new BufferedImage(tempRoiImg.getWidth(), tempRoiImg.getHeight(), tempRoiImg.getType());
             for(int i = 0;i <tempRoiImg.getWidth(); i++ ){
@@ -89,7 +89,7 @@ public class Edge {
             w = (int)(Math.abs(cornerA[1] - cornerB[1])/b);
             h = (int)(Math.abs(cornerA[1] - cornerB[1])/a);
             tly = (int)((cornerA[1] + cornerB[1])/2 - (Math.abs(cornerA[1] - cornerB[1])/c));
-            tlx = (int)((cornerA[0] + cornerB[0])/2); 
+            tlx = (int)((cornerA[0] + cornerB[0])/2 + offset); 
             BufferedImage tempRoiImg = img.getSubimage(tlx, tly, w, h);
             roiImg = new BufferedImage(tempRoiImg.getHeight(), tempRoiImg.getWidth(), tempRoiImg.getType());
             for(int i = 0;i <tempRoiImg.getWidth(); i++ ){

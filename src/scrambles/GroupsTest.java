@@ -19,27 +19,27 @@ public class GroupsTest {
     private static int[][][] sortedData = new int[36][36][2];
 
     public static void main(String[] args) {
-        ArrayList<Integer>[] initGroups = initialGroups("balloons.txt");
+        int[][] dInfo = getDistInfo("kittens.txt");
+        ArrayList<Integer>[] initGroups = initialGroups(dInfo);
         ArrayList<ArrayList<Integer>> possGroups = possibleGroups(initGroups);
         ArrayList<ArrayList<Integer>> aGroups = allGroups(possGroups);
         ArrayList<ArrayList<Integer>> fGroups = finalGroups(aGroups);
-
+    }
+    
+    public static void getGroups(int[][] dInfo){
+        ArrayList<Integer>[] initGroups = initialGroups(dInfo);
+        ArrayList<ArrayList<Integer>> possGroups = possibleGroups(initGroups);
+        ArrayList<ArrayList<Integer>> aGroups = allGroups(possGroups);
+        ArrayList<ArrayList<Integer>> fGroups = finalGroups(aGroups);
     }
 
-    public static ArrayList<Integer>[] initialGroups(String fileName) {
-        //fileName contains edgeROI comparison scores (sorted?)
-        int maxGroupSize = 15;
+    public static int[][] getDistInfo(String fileName) {
+        int[][] dInfo = new int[36][36];
         String line;
         String edgeNumsLine;
         String[] edgeNumsLineSplit;
-        int[] edgeNums = new int[36];
-
-        int[][] lineData = new int[36][2];
         String[] lineSplit;
-        double[][] lineDataScored;
-        //double[][][] lineScores = new double[36][36][4];
-        ArrayList<Integer>[] lineGroups = new ArrayList[36];
-        double[] maxIndices = new double[36];
+
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter("output.txt"));
             BufferedReader br = new BufferedReader(new FileReader(fileName));
@@ -50,103 +50,114 @@ public class GroupsTest {
                     //process next line
                     lineSplit = line.split(",");
                     int[] data = new int[36];
-                    lineDataScored = new double[36][4];
-
-                    for (int i = 0; i < 36; i++) {//1 - 37 because data file started with ""
+                    for (int i = 0; i < 36; i++) {
                         data[i] = Integer.parseInt(lineSplit[i]);
                     }
-                    distInfo[d] = data;
-                    lineData = new int[36][2];
-                    //sort data into lineData[][] consisting of ordered pairs:(edge id num, dist to edge)
-                    for (int i = 0; i < 36; i++) {
-                        lineData[i][0] = i;
-                        lineData[i][1] = data[i];
-                    }
-                    sort(lineData);
-                    sortedData[d] = lineData;
-
-                    double minDiff = 1000, maxDiff = 0, minError = 1000, maxError = 0, minAngle = 1000, maxAngle = 0;
-                    //score each point and set max and mins
-                    for (int i = 1; i <= maxGroupSize; i++) {
-                        double diff = lineData[i][1] - lineData[i - 1][1];
-                        if (diff < minDiff) {
-                            minDiff = diff;
-                        }
-                        if (diff > maxDiff) {
-                            maxDiff = diff;
-                        }
-                        double error = getError(lineData, i, maxGroupSize);
-                        if (error < minError) {
-                            minError = error;
-                        }
-                        if (error > maxError) {
-                            maxError = error;
-                        }
-                        double angle = getAngle(lineData, i, maxGroupSize);
-                        if (angle < minAngle) {
-                            minAngle = angle;
-                        }
-                        if (angle > maxAngle) {
-                            maxAngle = angle;
-                        }
-                        lineDataScored[i][0] = diff;
-                        lineDataScored[i][1] = error;
-                        lineDataScored[i][2] = angle;
-                        lineDataScored[i][3] = 0;
-                    }
-
-                    //normalize scores
-                    for (int i = 1; i <= maxGroupSize; i++) {
-                        lineDataScored[i][0] = (lineDataScored[i][0] - minDiff) / (maxDiff - minDiff);
-                        lineDataScored[i][1] = (lineDataScored[i][1] - minError) / (maxError - minError);
-                        lineDataScored[i][2] = (lineDataScored[i][2] - minAngle) / (maxAngle - minAngle);
-                        lineDataScored[i][3] = lineDataScored[i][0] + (1 - lineDataScored[i][1]) + (1 - lineDataScored[i][2]);
-                    }
-
-                    //get index of data point with highest score
-                    int maxIndex = 0;
-                    double maxScore = 0;
-                    for (int i = 1; i <= maxGroupSize; i++) {
-                        if (lineDataScored[i][3] > maxScore) {
-                            maxScore = lineDataScored[i][3];
-                            maxIndex = i;
-                        }
-                    }
-                    maxIndices[d] = maxIndex;
-                    // create group of first maxIndex edge id numbers and add to lineGroups array
-                    ArrayList<Integer> group = new ArrayList();
-                    for (int k = 0; k < maxIndex; k++) {
-                        group.add(lineData[k][0]);
-                    }
-                    System.out.println("group size: " + group.size());
-                    System.out.println("group: " + Arrays.toString(group.toArray()));
-                    lineGroups[d] = group;
-
-//                System.out.print("max: " + maxIndex);
-//                for(int i = 0; i < lineData.length; i++){
-//                    System.out.print(" " + lineData[i][1]) ;
-//                 }
-//                System.out.println();
-//                for (int i = 0; i <= maxGroupSize; i++) {
-//                    //System.out.println("diff: " + lineDataScored[i][0] + " error: " + lineDataScored[i][1] + " angle: "
-//                                                + lineDataScored[i][2] + " total: " + lineDataScored[i][3]);
-//                }
+                    dInfo[d] = data;
                 }
-
             }
+
             System.out.println("*********  distInfo  **********");
             for (int[] arr : distInfo) {
                 System.out.println(Arrays.toString(arr));
             }
-            System.out.println("lineGroups length: " + lineGroups.length);
-            System.out.println("******************");
-            for (ArrayList g : lineGroups) {
-                System.out.println(Arrays.toString(g.toArray()));
-            }
+
             br.close();
             bw.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        return dInfo;
+    }
+
+    public static ArrayList<Integer>[] initialGroups(int[][] dInfo) {
+        //fileName contains edgeROI comparison scores (sorted?)
+        distInfo = dInfo;
+        int maxGroupSize = 15;
+        int[] edgeNums = new int[36];
+
+        int[][] lineData = new int[36][2];
+
+        double[][] lineDataScored;
+
+        ArrayList<Integer>[] lineGroups = new ArrayList[36];
+        double[] maxIndices = new double[36];
+
+        for (int d = 0; d < 36; d++) {
+
+            lineDataScored = new double[36][4];
+
+            lineData = new int[36][2];
+            //sort data into lineData[][] consisting of ordered pairs:(edge id num, dist to edge)
+            for (int i = 0; i < 36; i++) {
+                lineData[i][0] = i;
+                lineData[i][1] = distInfo[d][i];
+            }
+            sort(lineData);
+            sortedData[d] = lineData;
+
+            double minDiff = 1000, maxDiff = 0, minError = 1000, maxError = 0, minAngle = 1000, maxAngle = 0;
+            //score each point and set max and mins
+            for (int i = 1; i <= maxGroupSize; i++) {
+                double diff = lineData[i][1] - lineData[i - 1][1];
+                if (diff < minDiff) {
+                    minDiff = diff;
+                }
+                if (diff > maxDiff) {
+                    maxDiff = diff;
+                }
+                double error = getError(lineData, i, maxGroupSize);
+                if (error < minError) {
+                    minError = error;
+                }
+                if (error > maxError) {
+                    maxError = error;
+                }
+                double angle = getAngle(lineData, i, maxGroupSize);
+                if (angle < minAngle) {
+                    minAngle = angle;
+                }
+                if (angle > maxAngle) {
+                    maxAngle = angle;
+                }
+                lineDataScored[i][0] = diff;
+                lineDataScored[i][1] = error;
+                lineDataScored[i][2] = angle;
+                lineDataScored[i][3] = 0;
+            }
+
+            //normalize scores
+            for (int i = 1; i <= maxGroupSize; i++) {
+                lineDataScored[i][0] = (lineDataScored[i][0] - minDiff) / (maxDiff - minDiff);
+                lineDataScored[i][1] = (lineDataScored[i][1] - minError) / (maxError - minError);
+                lineDataScored[i][2] = (lineDataScored[i][2] - minAngle) / (maxAngle - minAngle);
+                lineDataScored[i][3] = lineDataScored[i][0] + (1 - lineDataScored[i][1]) + (1 - lineDataScored[i][2]);
+            }
+
+            //get index of data point with highest score
+            int maxIndex = 0;
+            double maxScore = 0;
+            for (int i = 1; i <= maxGroupSize; i++) {
+                if (lineDataScored[i][3] > maxScore) {
+                    maxScore = lineDataScored[i][3];
+                    maxIndex = i;
+                }
+            }
+            maxIndices[d] = maxIndex;
+            // create group of first maxIndex edge id numbers and add to lineGroups array
+            ArrayList<Integer> group = new ArrayList();
+            for (int k = 0; k < maxIndex; k++) {
+                group.add(lineData[k][0]);
+            }
+            System.out.println("group size: " + group.size());
+            System.out.println("group: " + Arrays.toString(group.toArray()));
+            lineGroups[d] = group;
+        }
+
+        System.out.println("lineGroups length: " + lineGroups.length);
+        System.out.println("******************");
+        for (ArrayList g : lineGroups) {
+            System.out.println(Arrays.toString(g.toArray()));
         }
 
         return lineGroups;
@@ -234,15 +245,14 @@ public class GroupsTest {
         for (int mg = 7; mg < 12; mg++) {
             //make a deep copy of groupsOrig
             ArrayList<ArrayList<Integer>> groups = new ArrayList();
-            for(ArrayList<Integer> group: groupsOrig){
+            for (ArrayList<Integer> group : groupsOrig) {
                 ArrayList<Integer> groupCopy = new ArrayList();
-                for(int n: group){
+                for (int n : group) {
                     groupCopy.add(n);
                 }
                 groups.add(groupCopy);
             }
-            
-            
+
             while (groups.size() > 8) {
                 double minDist = 1000;
                 int minIndexA = -1;
@@ -265,22 +275,34 @@ public class GroupsTest {
             //score this set of finalGroups
             double[][] scores = new double[groups.size()][4];//groups.size() should = 8 here.
             double avgError = 0, avgAngle = 0, avgDiff = 0;
-            
+
             //get raw scores for error, angle and difference
-            for(int i = 0; i <groups.size(); i++){
+            for (int i = 0; i < groups.size(); i++) {
                 ArrayList<Integer> g = groups.get(i);
-                for(int n: g){
+                for (int n : g) {
                     double gnError = getError(sortedData[n], g.size(), 15);
                     double gnAngle = getAngle(sortedData[n], g.size(), 15);
                     int fn = sortedData[n][g.size()][1];
-                    int ln = sortedData[n][g.size()-1][1];
+                    int ln = sortedData[n][g.size() - 1][1];
                     double gnDiff = Math.abs(fn - ln);
-                    if (gnError > maxError) maxError = gnError;
-                    if (gnError < minError) minError = gnError;
-                    if (gnAngle > maxAngle) maxAngle = gnAngle;
-                    if (gnAngle < minAngle) minAngle = gnAngle;
-                    if (gnDiff > maxDiff) maxDiff = gnDiff;
-                    if (gnDiff < minDiff) minDiff = gnDiff;
+                    if (gnError > maxError) {
+                        maxError = gnError;
+                    }
+                    if (gnError < minError) {
+                        minError = gnError;
+                    }
+                    if (gnAngle > maxAngle) {
+                        maxAngle = gnAngle;
+                    }
+                    if (gnAngle < minAngle) {
+                        minAngle = gnAngle;
+                    }
+                    if (gnDiff > maxDiff) {
+                        maxDiff = gnDiff;
+                    }
+                    if (gnDiff < minDiff) {
+                        minDiff = gnDiff;
+                    }
                     avgError += gnError;
                     avgAngle += gnAngle;
                     avgDiff += gnDiff;
@@ -296,24 +318,24 @@ public class GroupsTest {
             groupsSets.add(groups);
         }
         //normalize and sum scores
-           double maxTotalScore = 0;
-           int indexOfBestGroupSet = -1;
-           
-           for(int i = 0; i < groupsSets.size(); i++){//for each set of final groups
-               double[][] scoreSet = scoreSets.get(i);
-                double totalScore = 0;
-                for(double[] s: scoreSet){//for each group in the set
-                    s[3] = (s[0] - minDiff)/(maxDiff - minDiff) + (1 - (s[1] - minError)/(maxError - minError))
-                                    + (1 - (s[2] - minAngle)/(maxAngle - minAngle));
-                    totalScore += s[3];
-                }
-                if(totalScore > maxTotalScore){
-                    maxTotalScore = totalScore;
-                    indexOfBestGroupSet = i;
-                }
-           }
-           ArrayList<ArrayList<Integer>> bestGroupSet = groupsSets.get(indexOfBestGroupSet);
-           
+        double maxTotalScore = 0;
+        int indexOfBestGroupSet = -1;
+
+        for (int i = 0; i < groupsSets.size(); i++) {//for each set of final groups
+            double[][] scoreSet = scoreSets.get(i);
+            double totalScore = 0;
+            for (double[] s : scoreSet) {//for each group in the set
+                s[3] = (s[0] - minDiff) / (maxDiff - minDiff) + (1 - (s[1] - minError) / (maxError - minError))
+                        + (1 - (s[2] - minAngle) / (maxAngle - minAngle));
+                totalScore += s[3];
+            }
+            if (totalScore > maxTotalScore) {
+                maxTotalScore = totalScore;
+                indexOfBestGroupSet = i;
+            }
+        }
+        ArrayList<ArrayList<Integer>> bestGroupSet = groupsSets.get(indexOfBestGroupSet);
+
         System.out.println("finalGroups");
         for (ArrayList g : bestGroupSet) {
             System.out.println(Arrays.toString(g.toArray()));
@@ -382,7 +404,7 @@ public class GroupsTest {
                 neighborInfo[place + 1] = neighborInfo[place];
                 place--;
             }
-            neighborInfo[place+1] = temp;
+            neighborInfo[place + 1] = temp;
         }
     }
 
