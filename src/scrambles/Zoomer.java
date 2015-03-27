@@ -17,6 +17,7 @@ import javax.imageio.ImageIO;
 import java.io.*;
 import java.util.Arrays;
 
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -43,33 +44,73 @@ public class Zoomer implements Runnable {
     public Zoomer() {
 
 
-        try {
-            
-            //img = ImageIO.read(new File("teapot.PNG"));
-            String path = "http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg";
-            //img = ImageIO.read(new File("aaron.JPG"));
-            //System.out.println(img.getType());
-            //img = ImageIO.read(new File("kittens.jpg"));
-            //String path = "http://www.bendixens.com/mm5/graphics/00000001/scramhummingbirds.jpg";
-            //String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
-            //String path = "http://s5.thisnext.com/media/largest_dimension/Symphony-Scramble-Squares_5DECA6A5.jpg";
-
-            URL url = new URL(path);
-            //img = ImageIO.read(url);
-            CannyEdgeDetector detector = new CannyEdgeDetector();
-     //adjust its parameters as desired
-       detector.setLowThreshold(0.5f);
-       detector.setHighThreshold(1f);
-    //apply it to an image
-       detector.setSourceImage(ImageIO.read(url));
-       detector.process();
-       img = detector.getEdgesImage();
+//        try {
+//            
+//            //img = ImageIO.read(new File("teapot.PNG"));
+//            String path = "http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg";
+//            //img = ImageIO.read(new File("aaron.JPG"));
+//            //System.out.println(img.getType());
+//            //img = ImageIO.read(new File("kittens.jpg"));
+//            //String path = "http://www.bendixens.com/mm5/graphics/00000001/scramhummingbirds.jpg";
+//            //String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
+//            //String path = "http://s5.thisnext.com/media/largest_dimension/Symphony-Scramble-Squares_5DECA6A5.jpg";
+//
+//            URL url = new URL(path);
+//            img = ImageIO.read(url);
+////            CannyEdgeDetector detector = new CannyEdgeDetector();
+////     //adjust its parameters as desired
+////       detector.setLowThreshold(0.5f);
+////       detector.setHighThreshold(1f);
+////    //apply it to an image
+////       detector.setSourceImage(ImageIO.read(url));
+////       detector.process();
+////       img = detector.getEdgesImage();
+//            
+//            zoomImage = new BufferedImage((r * 2 + 1) * zoomFactor, (r * 2 + 1) * zoomFactor, img.getType());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+        img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_RGB);
+        zoomImage = new BufferedImage((r * 2 + 1) * zoomFactor, (r * 2 + 1) * zoomFactor, img.getType());
+        SwingUtilities.invokeLater(this);
+    }
+    
+    public Zoomer(BufferedImage imgArg) {
+        
+            img = imgArg;
+//            CannyEdgeDetector detector = new CannyEdgeDetector();
+//     //adjust its parameters as desired
+//       detector.setLowThreshold(0.5f);
+//       detector.setHighThreshold(1f);
+//   // apply it to an image
+//       detector.setSourceImage(img);
+//       detector.process();
+//     img = detector.getEdgesImage();
             
             zoomImage = new BufferedImage((r * 2 + 1) * zoomFactor, (r * 2 + 1) * zoomFactor, img.getType());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            SwingUtilities.invokeLater(this);
+        
+        
     }
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Zoomer());
+    }
+    
+    public void zoom(BufferedImage img) {
+        SwingUtilities.invokeLater(new Zoomer(img));
+    }
+    
+    public  void setImage(BufferedImage newImg){
+        img = newImg;
+        zoomImage = new BufferedImage((r * 2 + 1) * zoomFactor, (r * 2 + 1) * zoomFactor, img.getType());
+        //SwingUtilities.invokeLater(this);
+        
+    }
+    
+    
+     
+     
 
     @Override
     public void run() {
@@ -90,9 +131,7 @@ public class Zoomer implements Runnable {
         return zoomPanel;
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Zoomer());
-    }
+   
 
     public void drawZoomImage(int mx, int my, boolean pixInfo) {
         Graphics g = zoomImage.getGraphics();
@@ -103,30 +142,42 @@ public class Zoomer implements Runnable {
                     int y = my - r + i;
                     g.setColor(new Color(img.getRGB(x, y)));
                     g.fillRect(j * zoomFactor, i * zoomFactor, zoomFactor, zoomFactor);
-                    ArrayList<double[][]> pixelGroups = getPixGroups(x, y, img, 0);
-                    double[] pValues = manovaPVs(pixelGroups);
-                    g.setColor(Color.RED);
-                    if(pValues[0] < .02 && pValues[0] > 0 ){
-                        g.fillOval(j * zoomFactor + 30, i * zoomFactor + 30, 10, 10);
-                    }
+                    
+//                    ArrayList<double[][]> pixelGroups = getPixGroups(x, y, img, 0);
+//                    double[] pValues = manovaPVs(pixelGroups);
+//                    g.setColor(Color.RED);
+//                    if(pValues[0] < .02 && pValues[0] > 0 ){
+//                        g.fillOval(j * zoomFactor + 30, i * zoomFactor + 30, 10, 10);
+//                    }
 //                    ArrayList<double[][]> pixelGroups = getPixGroups(x, y, img, 0);
 //                    double[] pValues = manovaPVs(pixelGroups);
 //                    
-//                    if (pixInfo) {
-//                        g.setColor(Color.RED);
+                    if (pixInfo) {
+                        g.setColor(Color.RED);
 //                        g.drawString("" + (int)(pValues[0]*1000), j * zoomFactor + 5, i * zoomFactor + 15);
 //                        g.drawString("" + (int)(pValues[1]*1000), j * zoomFactor + 5, i * zoomFactor + 25);
 //                        g.drawString("" + (int)(pValues[2]*1000), j * zoomFactor + 5, i * zoomFactor + 35);
 //                        g.drawString("" + (int)(pValues[3]*1000), j * zoomFactor + 5, i * zoomFactor + 45);
-//                        
-////                        Color pixColor = new Color(img.getRGB(x, y));
-////                        g.drawString("" + pixColor.getRed(), j * zoomFactor + 5, i * zoomFactor + 15);
-////                        g.drawString("" + pixColor.getGreen(), j * zoomFactor + 5, i * zoomFactor + 25);
-////                        g.drawString("" + pixColor.getBlue(), j * zoomFactor + 5, i * zoomFactor + 35);
-//                    }
+                        
+                        Color pixColor = new Color(img.getRGB(x, y));
+                        g.drawString("" + pixColor.getRed(), j * zoomFactor + 5, i * zoomFactor + 15);
+                        g.drawString("" + pixColor.getGreen(), j * zoomFactor + 5, i * zoomFactor + 25);
+                        g.drawString("" + pixColor.getBlue(), j * zoomFactor + 5, i * zoomFactor + 35);
+                    }
                 }
             }
         }
+//                   if (pixInfo) {
+//                        g.setColor(Color.RED);
+//                       for(int i = 0; i < 5; i++){
+//                           Color pixColor = new Color(img.getRGB(mx, my+2-i));
+//                            g.drawString("" + pixColor.getRed(), (r/2+3) * zoomFactor + 5, (r/2+5-i) * zoomFactor + 15);
+//                            g.drawString("" + pixColor.getGreen(), (r/2+3) * zoomFactor + 5, (r/2+5-i)  * zoomFactor + 25);
+//                            g.drawString("" + pixColor.getBlue(), (r/2+3) * zoomFactor + 5, (r/2+5-i)  * zoomFactor + 35);
+//                       }
+//                   }
+                       
+
     }
 
     public void printPixelInfo(int mx, int my) {
@@ -325,23 +376,22 @@ public class Zoomer implements Runnable {
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            zoomer.drawZoomImage(e.getX(), e.getY(), false);
-
-            zoomer.getZoomPanel().repaint();
-        }
-
-        public void mouseDragged(MouseEvent e) {
             zoomer.drawZoomImage(e.getX(), e.getY(), true);
 
             zoomer.getZoomPanel().repaint();
         }
 
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            printPixelInfo(e.getX(), e.getY());
-            zoomer.getZoomPanel().repaint();
+//        public void mouseDragged(MouseEvent e) {
+//            zoomer.drawZoomImage(e.getX(), e.getY(), true);
+//
+//            zoomer.getZoomPanel().repaint();
+//        }
 
-        }
+//        @Override
+//        public void mouseReleased(MouseEvent e) {
+//            
+//
+//        }
 
     }
 
