@@ -27,9 +27,9 @@ public class ImageGame extends JPanel {
     BufferedImage rotatedImage;
     BufferedImage borderSkeletonImage;
     BufferedImage edgeImage;
-    BufferedImage squaresBasedImage = new BufferedImage(50, 50, BufferedImage.TYPE_INT_RGB);
+    BufferedImage squaresBasedImage = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
     BufferedImage pairImage = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);
-    BufferedImage processedImage;
+    BufferedImage processedImage;// = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);;
     //BufferedImage[] subImages = new BufferedImage[3];
     ArrayList<double[]> borderEqs = new ArrayList();
     Square[][] squares = new Square[3][3];
@@ -38,7 +38,7 @@ public class ImageGame extends JPanel {
     ArrayList<ArrayList<Pixel[]>> edges = new ArrayList();//should be of sixe 36, with first 18 being horizontal edges and second 18 being vertical edges.
     ArrayList<Integer>[] neighborGroups = new ArrayList[36];
     double[][][] neighborData = new double[36][36][2];
-    Zoomer zoom = new Zoomer();
+    //Zoomer zoom = new Zoomer();
 
     public void run(){
 
@@ -578,6 +578,7 @@ public class ImageGame extends JPanel {
         System.out.println("min sd: " + minEdgeSD);
 
         processedImage = cornerImage(img, bestCorners);
+
         //return createSquares(edges);
         return createSquares(bestCorners);
     }
@@ -1253,15 +1254,15 @@ public class ImageGame extends JPanel {
         img2r = img2.getWidth()/2;
         int r = -rMax;
         while(r <= rMax){
-            
-            pairImage = new BufferedImage(img1.getWidth()*4, img1.getHeight()* 4, img1.getType());
-            Graphics2D gPairImg = pairImage.createGraphics(); 
-            gPairImg.rotate(Math.toRadians(180), pairImage.getWidth()/2, pairImage.getHeight()/2);
-            gPairImg.drawImage(img2, pairImage.getWidth() - 50 - img2.getWidth() - r, pairImage.getHeight()-20-img2.getHeight(), this);
-            gPairImg.rotate(Math.toRadians(180), pairImage.getWidth()/2, pairImage.getHeight()/2);
-            gPairImg.drawImage(img1, 50, 21 + img2.getHeight(), this);
-            repaint();
-            zoom.setImage(pairImage);
+//            
+//            pairImage = new BufferedImage(img1.getWidth()*4, img1.getHeight()* 4, img1.getType());
+//            Graphics2D gPairImg = pairImage.createGraphics(); 
+//            gPairImg.rotate(Math.toRadians(180), pairImage.getWidth()/2, pairImage.getHeight()/2);
+//            gPairImg.drawImage(img2, pairImage.getWidth() - 50 - img2.getWidth() - r, pairImage.getHeight()-20-img2.getHeight(), this);
+//            gPairImg.rotate(Math.toRadians(180), pairImage.getWidth()/2, pairImage.getHeight()/2);
+//            gPairImg.drawImage(img1, 50, 21 + img2.getHeight(), this);
+//            repaint();
+            //zoom.setImage(pairImage);
             
             score = 0;
             int img1Start = Math.max(0, img1r + r - img2r);
@@ -1285,9 +1286,9 @@ public class ImageGame extends JPanel {
         double score = 0;
         int[] rgb1 = Process.sepColors(p1);
         int[] rgb2 = Process.sepColors(p2);
-        System.out.print("pix Info: ");
-        System.out.print(Arrays.toString(rgb1));
-        System.out.println(Arrays.toString(rgb2));
+//        System.out.print("pix Info: ");
+//        System.out.print(Arrays.toString(rgb1));
+//        System.out.println(Arrays.toString(rgb2));
         for(int i = 0; i < 3; i++){
             score += Math.abs(rgb1[i] - rgb2[i]);
         }
@@ -1313,7 +1314,7 @@ public class ImageGame extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(img, 20, 20, this);
-        g.drawImage(squaresBasedImage, img.getWidth() + 50, 20, this);
+        g.drawImage(processedImage, 20, 20, this);
+       //g.drawImage(processedImage, img.getWidth() + 50, 20, this);
     }
 }
