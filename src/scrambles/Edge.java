@@ -46,7 +46,7 @@ public class Edge {
     }
     
     private RegionOI getRoi(BufferedImage img){
-        double a = 2, b = 5, offset = 2;
+        double a = 2, b = 5, offset = 0;
         double c = 2*a;
         int tlx, tly, w, h;
         BufferedImage roiImg;
