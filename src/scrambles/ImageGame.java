@@ -14,6 +14,7 @@ import java.util.*;
 import java.net.URL;
 import org.apache.commons.math3.stat.regression.*;
 import org.apache.commons.math3.stat.descriptive.*;
+import java.util.Scanner;
 
 public class ImageGame extends JPanel {
 
@@ -26,7 +27,8 @@ public class ImageGame extends JPanel {
     BufferedImage rotatedImage;
     BufferedImage borderSkeletonImage;
     BufferedImage edgeImage;
-    BufferedImage squaresBasedImage;
+    BufferedImage squaresBasedImage = new BufferedImage(50, 50, BufferedImage.TYPE_INT_RGB);
+    BufferedImage pairImage = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);
     BufferedImage processedImage;
     //BufferedImage[] subImages = new BufferedImage[3];
     ArrayList<double[]> borderEqs = new ArrayList();
@@ -36,21 +38,22 @@ public class ImageGame extends JPanel {
     ArrayList<ArrayList<Pixel[]>> edges = new ArrayList();//should be of sixe 36, with first 18 being horizontal edges and second 18 being vertical edges.
     ArrayList<Integer>[] neighborGroups = new ArrayList[36];
     double[][][] neighborData = new double[36][36][2];
+    Zoomer zoom = new Zoomer();
 
-    public ImageGame() {
+    public void run(){
 
         try {
-            //img = ImageIO.read(new File("teapot.PNG"));
+            img = ImageIO.read(new File("teapot.PNG"));
             //img = ImageIO.read(new URL("http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg"));
             //String path = "http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg";
             //System.out.println(img.getType());
             //img = ImageIO.read(new File("kittens.jpg"));
             //String path = "http://www.bendixens.com/mm5/graphics/00000001/scramhummingbirds.jpg";
-            String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
+            //String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
             //String path = "http://s5.thisnext.com/media/largest_dimension/Symphony-Scramble-Squares_5DECA6A5.jpg";
 
-            URL url = new URL(path);
-            img = ImageIO.read(url);
+            //URL url = new URL(path);
+            //img = ImageIO.read(url);
             imgWidth = img.getWidth();
             imgHeight = img.getHeight();
 //        for (Square[] sa : squares) {
@@ -61,6 +64,8 @@ public class ImageGame extends JPanel {
             squares = processImage(img);
             //getNeighbors(squares);
             squaresBasedImage = roiMapImg(squares);
+            //Zoomer.zoom(squaresBasedImage);
+            
             
 
             //print cornerFeatures for each regionOI of each square:
@@ -197,7 +202,8 @@ public class ImageGame extends JPanel {
             System.out.println();
         }
         System.out.println("&&&&&&&&& group info &&&&&&&");
-        GroupsTest.getGroups(distInfo);
+        ArrayList<ArrayList<Integer>> finalGroups = GroupsTest.getGroups(distInfo);
+        double[][] complements = getComplements(finalGroups, squares);
        
 ////        for(int[] n: neighborPairs){
 ////            System.out.println(Arrays.toString(n)); 
@@ -401,7 +407,7 @@ public class ImageGame extends JPanel {
 //           //}
 //
 //        
-        return distInfo;
+        return neighborPairs;
     }
 
     private ArrayList<ArrayList<Integer>> cullGroups(ArrayList<Integer>[] neighborGroups) {
@@ -741,6 +747,7 @@ public class ImageGame extends JPanel {
         int x = 10;
         int y = 10;
         int[][] neighborPairs = getNeighbors(squares);
+        
 
         for (Square[] row : squares) {
             for (Square square : row) {
@@ -1183,6 +1190,109 @@ public class ImageGame extends JPanel {
         g2.drawImage(img, null, 0, 0);
         return newImage;
     }
+    
+    public double[][] getComplements(ArrayList<ArrayList<Integer>> groups, Square[][] squares){
+        //given array of 8 groups, return 4 complementary pairings.
+        double[][] complements = new double[8][3];
+        double[][] pairScores = new double[8][8];
+        for(int i = 0; i<groups.size(); i++){
+            for(int j = 0; j<groups.size(); j++){
+                //take lowest complement score for pairs of images in groups i and j
+                double minPairScore = 1000000;
+                for(int g1: groups.get(i)){
+                    int edge1 = g1%4;
+                    int row1 = g1/12;
+                    int col1 = (g1/4)%3;
+                    for(int g2: groups.get(j)){
+                        int edge2 = g2%4;
+                        int row2 = g2/12;
+                        int col2 = (g2/4)%3;
+                        BufferedImage img1 = squares[row1][col1].edges[edge1].roi.img;
+                        BufferedImage img2 = squares[row2][col2].edges[edge2].roi.img;
+                        double pairScore = complementScore(img1,img2);
+                        if (pairScore < minPairScore){
+                            minPairScore = pairScore;
+                        }
+                    }
+                }
+                pairScores[i][j] = minPairScore;
+            }
+        }
+        System.out.println("************ pairScores **********" );
+        for(int i = 0; i < pairScores.length; i++){
+            for(int j = 0; j< pairScores.length; j++){
+                System.out.print("(" + i + ", " + j + ", " + pairScores[i][j] + ")");
+            }
+            System.out.println();
+        }
+        for(int i = 0; i<pairScores.length - 1; i++){
+            double minScore = -1;
+            int complement = -1;
+            for(int j = i+1; j<pairScores.length; j++){
+                if(pairScores[i][j] < minScore || minScore < 0){
+                    minScore = pairScores[i][j];
+                    complement = j;
+                }
+            }
+            complements[i][0] = i;
+            complements[i][1] = complement;
+            complements[i][2] = minScore;
+        }
+     System.out.println("***********  complement pairs  ***********");
+     for(double[] pair: complements){
+         System.out.println(Arrays.toString(pair));
+     }
+     return complements;  
+    }
+    
+    public double complementScore(BufferedImage img1, BufferedImage img2){
+        double score = 0, minScore = 100000;
+        int img1o, img1c, img1x, img2o, img2c, img2x, rMax, img1r, img2r;
+        rMax = (Math.min(img1.getWidth(), img2.getWidth()))/4;
+        img1r = img1.getWidth()/2;
+        img2r = img2.getWidth()/2;
+        int r = -rMax;
+        while(r <= rMax){
+            
+            pairImage = new BufferedImage(img1.getWidth()*4, img1.getHeight()* 4, img1.getType());
+            Graphics2D gPairImg = pairImage.createGraphics(); 
+            gPairImg.rotate(Math.toRadians(180), pairImage.getWidth()/2, pairImage.getHeight()/2);
+            gPairImg.drawImage(img2, pairImage.getWidth() - 50 - img2.getWidth() - r, pairImage.getHeight()-20-img2.getHeight(), this);
+            gPairImg.rotate(Math.toRadians(180), pairImage.getWidth()/2, pairImage.getHeight()/2);
+            gPairImg.drawImage(img1, 50, 21 + img2.getHeight(), this);
+            repaint();
+            zoom.setImage(pairImage);
+            
+            score = 0;
+            int img1Start = Math.max(0, img1r + r - img2r);
+            int img1End = Math.min(img1.getWidth()-1, img1r + (img2r + r));
+            int img2End = Math.max(0, img2r + r - img1r);
+            int img2Start = Math.min(img2.getWidth()-1, img2r + (img1r + r));
+            for(int i = 0; i < Math.min(img1End-img1Start,img2Start - img2End); i++){
+                double pixScore = hEdgeScore(img1.getRGB(img1Start + i, 0), img2.getRGB(img2Start - i, 0));
+                score += pixScore;
+            }
+            if(score < minScore){
+                minScore = score;
+            }
+          r++; 
+          
+        }
+        return minScore;
+    }
+    
+    public double hEdgeScore(int p1, int p2){
+        double score = 0;
+        int[] rgb1 = Process.sepColors(p1);
+        int[] rgb2 = Process.sepColors(p2);
+        System.out.print("pix Info: ");
+        System.out.print(Arrays.toString(rgb1));
+        System.out.println(Arrays.toString(rgb2));
+        for(int i = 0; i < 3; i++){
+            score += Math.abs(rgb1[i] - rgb2[i]);
+        }
+        return score;
+    }
 
     public static void main(String[] args) {
 
@@ -1197,12 +1307,13 @@ public class ImageGame extends JPanel {
         c.add(panel);
 
         w.setVisible(true);
+        panel.run();
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(processedImage, 20, 20, this);
+        g.drawImage(img, 20, 20, this);
         g.drawImage(squaresBasedImage, img.getWidth() + 50, 20, this);
     }
 }
