@@ -26,11 +26,12 @@ public class GroupsTest {
         ArrayList<ArrayList<Integer>> fGroups = finalGroups(aGroups);
     }
     
-    public static void getGroups(int[][] dInfo){
+    public static ArrayList<ArrayList<Integer>> getGroups(int[][] dInfo){
         ArrayList<Integer>[] initGroups = initialGroups(dInfo);
         ArrayList<ArrayList<Integer>> possGroups = possibleGroups(initGroups);
         ArrayList<ArrayList<Integer>> aGroups = allGroups(possGroups);
         ArrayList<ArrayList<Integer>> fGroups = finalGroups(aGroups);
+        return fGroups;
     }
 
     public static int[][] getDistInfo(String fileName) {
@@ -370,7 +371,7 @@ public class GroupsTest {
         return result;
     }
 
-    private static double getError(int[][] data, int pos, int maxPos) {
+    public static double getError(int[][] data, int pos, int maxPos) {
 
         double ay = data[0][1], ax = 0, by = data[pos][1], bx = pos, cy = data[maxPos][1], cx = maxPos;
 
