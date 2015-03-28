@@ -38,21 +38,21 @@ public class ImageGame extends JPanel {
     ArrayList<ArrayList<Pixel[]>> edges = new ArrayList();//should be of sixe 36, with first 18 being horizontal edges and second 18 being vertical edges.
     ArrayList<Integer>[] neighborGroups = new ArrayList[36];
     double[][][] neighborData = new double[36][36][2];
-    //Zoomer zoom = new Zoomer();
+    Zoomer zoom = new Zoomer();
 
-    public void run(){
+    public ImageGame(){
 
         try {
-            img = ImageIO.read(new File("teapot.PNG"));
-            //img = ImageIO.read(new URL("http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg"));
+            //img = ImageIO.read(new File("teapot.PNG"));
+            img = ImageIO.read(new URL("http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg"));
             //String path = "http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg";
             //System.out.println(img.getType());
             //img = ImageIO.read(new File("kittens.jpg"));
             //String path = "http://www.bendixens.com/mm5/graphics/00000001/scramhummingbirds.jpg";
-            //String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
+            String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
             //String path = "http://s5.thisnext.com/media/largest_dimension/Symphony-Scramble-Squares_5DECA6A5.jpg";
 
-            //URL url = new URL(path);
+            URL url = new URL(path);
             //img = ImageIO.read(url);
             imgWidth = img.getWidth();
             imgHeight = img.getHeight();
@@ -64,7 +64,7 @@ public class ImageGame extends JPanel {
             squares = processImage(img);
             //getNeighbors(squares);
             squaresBasedImage = roiMapImg(squares);
-            //Zoomer.zoom(squaresBasedImage);
+            zoom.setImage(squaresBasedImage);
             
             
 
@@ -1219,26 +1219,65 @@ public class ImageGame extends JPanel {
                 pairScores[i][j] = minPairScore;
             }
         }
+        ArrayList<double[]> pairScoresArr = new ArrayList();
         System.out.println("************ pairScores **********" );
+        //load pairScoresArr with pairScores info
         for(int i = 0; i < pairScores.length; i++){
             for(int j = 0; j< pairScores.length; j++){
                 System.out.print("(" + i + ", " + j + ", " + pairScores[i][j] + ")");
+                double[] pairInfo = {i, j, pairScores[i][j]};
+                pairScoresArr.add(pairInfo);
             }
             System.out.println();
         }
-        for(int i = 0; i<pairScores.length - 1; i++){
+        
+        for(int i = 0; i < 4; i++){
+            
+            //look for lowest pair score
             double minScore = -1;
-            int complement = -1;
-            for(int j = i+1; j<pairScores.length; j++){
-                if(pairScores[i][j] < minScore || minScore < 0){
-                    minScore = pairScores[i][j];
-                    complement = j;
+            double mini = -1;
+            double minj = -1;
+            for(double[] scoreInfo: pairScoresArr){
+                if((scoreInfo[2] < minScore || minScore < 0)&& scoreInfo[0]!=scoreInfo[1]){
+                    minScore = scoreInfo[2];
+                    mini = scoreInfo[0];
+                    minj = scoreInfo[1];
                 }
             }
-            complements[i][0] = i;
-            complements[i][1] = complement;
+            //store pairInfo
+            complements[i][0] = mini;
+            complements[i][1] = minj;
             complements[i][2] = minScore;
+            
+            //remove all pairScores involving the two groups mini and minj from pairScoresArr
+            Iterator iter = pairScoresArr.iterator();
+            while(iter.hasNext()){
+                double[] next = (double[])iter.next();
+                if(next[0] == mini || next[0] == minj || next[1] == mini || next[1] == minj){
+                    iter.remove();
+                }
+            }
+            
         }
+        
+        
+        
+        
+        
+        
+//        for(int i = 0; i<pairScores.length - 1; i++){
+//            double minScore = -1;
+//            int complement = -1;
+//            for(int j = i+1; j<pairScores.length; j++){
+//                if(pairScores[i][j] < minScore || minScore < 0){
+//                    minScore = pairScores[i][j];
+//                    complement = j;
+//                }
+//            }
+//            complements[i][0] = i;
+//            complements[i][1] = complement;
+//            complements[i][2] = minScore;
+//        }
      System.out.println("***********  complement pairs  ***********");
      for(double[] pair: complements){
          System.out.println(Arrays.toString(pair));
@@ -1308,13 +1347,13 @@ public class ImageGame extends JPanel {
         c.add(panel);
 
         w.setVisible(true);
-        panel.run();
+        //panel.run();
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.drawImage(processedImage, 20, 20, this);
-       //g.drawImage(processedImage, img.getWidth() + 50, 20, this);
+       g.drawImage(squaresBasedImage, img.getWidth() + 50, 20, this);
     }
 }
