@@ -21,6 +21,7 @@ public class Square {
     int rotation = 0;
     int idNum;
     double[][] corners;
+    Tile tile;
     
     
     public Square(BufferedImage img){
