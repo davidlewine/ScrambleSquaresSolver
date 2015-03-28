@@ -5,8 +5,10 @@
  */
 
 package scrambles;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.awt.image.BufferedImage;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 /**
  *
  * @author David
@@ -46,7 +48,7 @@ public class Edge {
     }
     
     private RegionOI getRoi(BufferedImage img){
-        double a = 2, b = 5, offset = 0;
+        double a = 1, b = 5, offset = 0;
         double c = 2*a;
         int tlx, tly, w, h;
         BufferedImage roiImg;
@@ -98,6 +100,46 @@ public class Edge {
                 }
             }
         }
+        
+        //use standard deviation of rgb values of top rows of roiImg to strip away blank/shadow rows
+        //double sd = 0;
+        double threshold = 1.5;
+        int maxRowCount = 9;
+
+        System.out.print("edge sds: ");
+        double[] sds = new double[maxRowCount];
+        double medianSd;
+        double sdSd;
+        for(int rowCount = 0; rowCount < Math.min(maxRowCount, roiImg.getHeight()); rowCount++){
+            //get sd of next row
+            double[][] data = new double[4][roiImg.getWidth()];
+            for(int i = 0; i < roiImg.getWidth(); i++){
+                Color pixColor = new Color(roiImg.getRGB(i, rowCount));
+                data[0][i] = pixColor.getRed();
+                data[1][i] = pixColor.getGreen();
+                data[2][i] = pixColor.getBlue();
+                data[3][i] = data[0][i] + data[1][i] + data[2][i];
+            }
+//            double sdRed = (new DescriptiveStatistics(data[0])).getStandardDeviation(); 
+//            double sdGreen = (new DescriptiveStatistics(data[1])).getStandardDeviation();
+//            double sdBlue = (new DescriptiveStatistics(data[2])).getStandardDeviation();
+            sds[rowCount] = (new DescriptiveStatistics(data[3])).getStandardDeviation();//sd of sum of rgb values across the row
+//            System.out.print("" + sd + " ");
+        }
+        sdSd = (new DescriptiveStatistics(sds)).getStandardDeviation();
+        medianSd = (new DescriptiveStatistics(sds)).getPercentile(50);
+        for(double sd: sds){
+            System.out.print("" + sd + " " + (medianSd/sd) + ", ");
+        }
+        System.out.println();
+        System.out.println();
+        
+        int sdsIndex = 0;
+        while(medianSd/sds[sdsIndex] > threshold){
+            sdsIndex++;
+        }
+        roiImg = roiImg.getSubimage(0,sdsIndex, roiImg.getWidth(), roiImg.getHeight()-(sdsIndex));
+        
         RegionOI roi = new RegionOI(roiImg, tlx, tly);
         return roi;
     }
