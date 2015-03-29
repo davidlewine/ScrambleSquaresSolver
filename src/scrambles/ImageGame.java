@@ -21,7 +21,7 @@ public class ImageGame extends JPanel {
     // instance variables - replace the example below with your own
     int imgHeight, imgWidth;
 
-    BufferedImage img;
+    BufferedImage puzzleImg;
     BufferedImage borderImage;
     BufferedImage hvBorderImage;
     BufferedImage rotatedImage;
@@ -30,6 +30,7 @@ public class ImageGame extends JPanel {
     BufferedImage squaresBasedImage = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
     BufferedImage pairImage = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);
     BufferedImage processedImage;// = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);;
+    BufferedImage solutionImage;
     //BufferedImage[] subImages = new BufferedImage[3];
     ArrayList<double[]> borderEqs = new ArrayList();
     Square[][] squares = new Square[3][3];
@@ -39,77 +40,91 @@ public class ImageGame extends JPanel {
     ArrayList<Integer>[] neighborGroups = new ArrayList[36];
     double[][][] neighborData = new double[36][36][2];
     Zoomer zoom = new Zoomer();
+    String[] wordHalves = {"1", "2", "3", "4", "A", "B", "C", "D"};
+    ArrayList<Tile> solution = new ArrayList();
+    
 
     public ImageGame(){
 
         try {
-            //img = ImageIO.read(new File("teapot.PNG"));
-            img = ImageIO.read(new URL("http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg"));
+            //puzzleImg = ImageIO.read(new File("teapot.PNG"));
+            puzzleImg = ImageIO.read(new File("turtles.jpg"));
+            //puzzleImg = ImageIO.read(new URL("http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg"));
             //String path = "http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg";
             //System.out.println(img.getType());
-            //img = ImageIO.read(new File("kittens.jpg"));
+            //puzzleImg = ImageIO.read(new File("kittens.jpg"));
             //String path = "http://www.bendixens.com/mm5/graphics/00000001/scramhummingbirds.jpg";
-            String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
+            //String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
             //String path = "http://s5.thisnext.com/media/largest_dimension/Symphony-Scramble-Squares_5DECA6A5.jpg";
 
-            URL url = new URL(path);
-            //img = ImageIO.read(url);
-            imgWidth = img.getWidth();
-            imgHeight = img.getHeight();
-//        for (Square[] sa : squares) {
-//            for (Square s : sa) {
-//                s = new Square(img);
-//            }
-//        }
-            squares = processImage(img);
-            //getNeighbors(squares);
-            squaresBasedImage = roiMapImg(squares);
-            zoom.setImage(squaresBasedImage);
-            
-            
+            //URL url = new URL(path);
+            //puzzleImg = ImageIO.read(url);
+            imgWidth = puzzleImg.getWidth();
+            imgHeight = puzzleImg.getHeight();
 
-            //print cornerFeatures for each regionOI of each square:
-//        for(Square[] rowOfSquares: squares){
-//            for(Square square: rowOfSquares){
-//                for(Edge edge: square.edges){
-//                        for(Feature f: edge.roi.features){
-//                            
-//                            //System.out.println("x: " + f.x + " y: " + f.y + " score: " + f.score + " edge: " + edge.toString());
-//                        }
-//                        //System.out.println();
-//                    
-//                }
-//            }
-//        }
-            writeDataFile();
+            squares = processImage(puzzleImg);
+            squaresBasedImage = roiMapImg(squares);
+            ArrayList<ArrayList<Integer>> groups = getGroups(squares);
+            double[][] complements = getComplements(groups, squares);
+            assignEdgeValues(squares, groups, complements);
+            Game game = new Game(squares);
+            solution = game.solve();
+            solutionImage = getSolutionImage(squares, solution);
+            
+            
+            
+            zoom.setImage(squaresBasedImage);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
-
-    public void writeDataFile() throws IOException {
-//        ArrayList<Pixel> pixelList = new ArrayList();
-//        BufferedWriter bw = new BufferedWriter(new FileWriter("Rdata.txt"));
-//        
-//        for(Square[] sqArr: squares){
-//            for(Square sq: sqArr){
-//                for(Edge edge: sq.edges){
-//                    for(Pixel[] pixSet: edge.pixelSets){
-//                        for(Pixel pixel: pixSet){
-//                            pixelList.add(pixel);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        Collections.sort(pixelList);
-//        pixIdData(bw, pixelList);
-//        //countData(bw, pixelList);
-//
-//        
-//        bw.close();
+    
+    private BufferedImage getSolutionImage(Square[][] squares, ArrayList<Tile> solution){
+        BufferedImage img = new BufferedImage((int)(puzzleImg.getWidth()+15), (int)(puzzleImg.getHeight()+15), puzzleImg.getType());
+        Graphics2D gImg = img.createGraphics();
+        for(int i = 0; i < 3; i++){
+            for(int j = 0; j < 3; j++){
+                Tile tile = solution.get(i*3+j);
+                BufferedImage tileImgUnrot = squares[tile.squareId/3][tile.squareId%3].squareImg;
+                BufferedImage tileImgRot = Process.rotate(tileImgUnrot, -90*tile.rotation);
+                gImg.drawImage(tileImgRot, null, j*img.getWidth()/3, i*img.getHeight()/3);
+            }
+        }
+        return img;
+        
     }
+    
+    private void setSquareImage(BufferedImage puzzleImg, Square square){
+        int w = (int)(square.corners[1][0] - square.corners[0][0]);
+        int h = (int)(square.corners[2][1] - square.corners[1][1]);
+        BufferedImage img = new BufferedImage(w, h, puzzleImg.getType());
+        Graphics2D g2 = img.createGraphics();
+        g2.drawImage(puzzleImg.getSubimage((int)square.corners[0][0], (int)square.corners[0][1], w, h),0, 0, this);
+        square.squareImg = img;
+    }
+
+    private void assignEdgeValues(Square[][] squares, ArrayList<ArrayList<Integer>> groups, double[][] complements){
+        //set each edge's value and complement value
+        for(Square[] row: squares){
+            for(Square square: row){
+                for(Edge edge: square.edges){
+                    int edgeNum = edge.squareNum*4 + edge.idNum;
+                    for(int i = 0; i < 4; i++){
+                        for(int j = 0; j<2; j++){
+                            if(groups.get((int)complements[i][j]).contains(edgeNum)){
+                                edge.value = wordHalves[j*4 + i];
+                                edge.complementValue = wordHalves[(1-j)*4 + i];
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
 
     private void countData(BufferedWriter bw, ArrayList<Pixel> pixelList) {
         try {
@@ -154,7 +169,7 @@ public class ImageGame extends JPanel {
 
     }
 
-    public int[][] getNeighbors(Square[][] squares) {
+    public ArrayList<ArrayList<Integer>> getGroups(Square[][] squares) {
         int maxGroupLength = 12;
         int[][] neighborPairs = new int[36][3];
         int[][] distInfo = new int[36][36];
@@ -203,211 +218,9 @@ public class ImageGame extends JPanel {
         }
         System.out.println("&&&&&&&&& group info &&&&&&&");
         ArrayList<ArrayList<Integer>> finalGroups = GroupsTest.getGroups(distInfo);
-        double[][] complements = getComplements(finalGroups, squares);
-       
-////        for(int[] n: neighborPairs){
-////            System.out.println(Arrays.toString(n)); 
-////        }
-////        System.out.println();
-//        int edgeCount = 0;
-////        for(Square[] row: squares){
-////            for(Square square: row){
-////                for(Edge edge: square.edges){
-////                    sort(edge.neighborInfo);
-////                    for(int i = 0; i < edge.neighborInfo.length; i++){
-////                        System.out.print("" + edge.neighborInfo[i][0] + " " );
-////                    }
-////                    System.out.println();
-////                    for(int i = 0; i < edge.neighborInfo.length; i++){
-////                        System.out.print("" + edge.neighborInfo[i][1] + " " );
-////                    }
-////                    System.out.println();
-////                }
-////            }
-////        }
-//
-//        for (int i = 0; i < neighborData.length; i++) {
-//            sort(neighborData[i]);
-//            for (int j = 0; j < neighborData[i].length; j++) {
-//                System.out.print("" + neighborData[i][j][0] + " ");
-//            }
-//            System.out.println();
-//            for (int j = 0; j < neighborData[i].length; j++) {
-//                System.out.print("" + neighborData[i][j][1] + " ");
-//            }
-//            System.out.println();
-//
-//        }
-////        System.out.println("$$$$$$$$$$$$$$$$$$$$$");
-//
-//        //get groups usinsg neighborData v1
-////        for(int i = 0; i < neighborData.length; i++){
-////            int upperThresh = 30;
-////            int lowerThresh = 5;
-////            sort(neighborData[i]);
-////            ArrayList<Integer> group = new ArrayList<Integer>();
-////            group.add(neighborData[i][0][0]);//add first element of the edge's data to group
-////            for(int j = 1; j < neighborData[i].length-1;j++){
-////                int m;
-////                if(j == 1) m = 2;
-////                else m = 1;
-////                if(neighborData[i][j][1]-neighborData[i][j-1][1] < upperThresh*m || neighborData[i][j+1][1]-neighborData[i][j][1] > lowerThresh){
-////                    group.add(neighborData[i][j][0]);
-////                }
-////                else{
-////                    break;
-////                }
-////            } 
-////            System.out.println(Arrays.toString(group.toArray()));
-////            neighborGroups[i] = group;
-////        }
-//        //get groups using neighborData v2 lin reg.
-//        //for (int n = 8; n < 30; n++) {//n = max group size
-//        ArrayList<ArrayList<Integer>> finalGroups = new ArrayList();
-//        int maxGroup = 20;
-//                int minGroup = 5;
-//                for(int m = minGroup; m < maxGroup; m++){
-//            for (int i = 0; i < neighborData.length; i++) {//for each edge
-//                int groupBound = -1;
-//                ArrayList<Integer> tempGroup = new ArrayList<Integer>();
-//                
-//                
-////                SimpleRegression regression = new SimpleRegression();
-////                double minError = 1000000;
-////                
-////                //getSumSquaredErrors();
-////                //System.out.println("" + i + ": ");
-////                for (int j = 1; j < n - 1; j++) {//for each division of first n closest edges (in indices 0 - 14)
-////                    //get two data sets: 0-j, 15-j
-////                    double[][] d1 = new double[j][2];
-////                    double[][] d2 = new double[n - j][2];
-////                    for (int p = 0; p < n; p++) {
-////                        if (p < j) {
-////                            d1[p][0] = p;
-////                            d1[p][1] = neighborData[i][p][1];
-////                        } else {
-////                            d2[p - j][0] = p;
-////                            d2[p - j][1] = neighborData[i][p][1];
-////                        }
-////                    }
-//////                System.out.print("d1: ");
-//////                for(double[] data: d1){
-//////                        System.out.print("" + data[0] + " ");
-//////                }
-//////                System.out.println();
-//////                System.out.print("d1: ");
-//////                for(double[] data: d1){
-//////                        System.out.print("" + data[1] + " ");
-//////                }
-//////                System.out.println();
-//////                System.out.print("d2: ");
-//////                for(double[] data: d2){
-//////                        System.out.print("" + data[0] + " ");
-//////                }
-//////                System.out.println();
-//////                System.out.print("d2: ");
-//////                for(double[] data: d2){
-//////                        System.out.print("" + data[1] + " ");
-//////                }
-//////                System.out.println();
-////
-////                    //getSumSquaredErrors of both and add
-////                    double d1Error = 0, d2Error = 0;
-////                    if (j == 1) {
-////                        d1Error = 0;
-////                    } else {
-////                        regression.addData(d1);
-////                        for (double[] datum : d1) {
-////                            //d1Error += Math.pow(datum[1] - regression.predict(datum[0]),2);
-////                            d1Error += Math.abs(datum[1] - regression.predict(datum[0]));
-////                        }
-////                        //d1Error = regression.getRSquare();
-////                    }
-////                    if (j == n - 1) {
-////                        d2Error = 0;
-////                    } else {
-////                        regression.clear();
-////                        regression.addData(d2);
-////                        for (double[] datum : d2) {
-////                            //d2Error += Math.pow(datum[1] - regression.predict(datum[0]),2);
-////                            d2Error += Math.abs(datum[1] - regression.predict(datum[0]));
-////                        }
-////                    }
-////                    double errorSum = d1Error + d2Error;
-//                //System.out.println("e1: " + d1Error + " e2: " + d2Error + " sum: " + errorSum + " ");
-//                    //look for minimum value of this sum
-////                    if (errorSum < minError) {
-////                        minError = errorSum;
-////                        groupBound = j;
-////                    }
-////                }
-////                
-//                
-////                double minAngle = 180;
-////                
-////                for(int p = 1; p < m; p++){
-////                    double[] a = neighborData[i][0];
-////                    double[] b = neighborData[i][p];
-////                    double[] c = neighborData[i][m];
-////                    double angle = Math.atan((p - 0)/(b[1] - a[1])) + Math.atan(1.0*(c[1] - b[1])/(m - p));
-////                    if(angle < minAngle){
-////                        minAngle = angle;
-////                        groupBound = p;
-////                    }
-////                }
-//                
-//                double minError = 1000;
-//                
-//                for(int p = 1; p < m; p++){
-//                    double[] a = neighborData[i][0];
-//                    double[] b = neighborData[i][p];
-//                    double[] c = neighborData[i][m];
-//                    double slopeAB = (b[1] - a[1])/p;
-//                    double interceptAB = 0;
-//                    double errorAB = 0;
-//                    double slopeBC = (c[1] - b[1])/m-p;
-//                    double interceptBC = c[1] - slopeBC*m;
-//                    double errorBC = 0;
-//                    for(int x = 0; x <= p; x++){
-//                        errorAB += Math.abs((slopeAB*x + interceptAB) - neighborData[i][x][1]);
-//                    }
-//                    for(int x = p; x <= m; x++){
-//                        errorBC += Math.abs((slopeBC*x + interceptBC) - neighborData[i][x][1]);
-//                    }
-//                    
-//                    
-//                    
-//                    if(minError > errorAB + errorBC){
-//                        minError = errorAB + errorBC;
-//                        groupBound = p;
-//                    }
-//                }
-//                  
-//                
-//                for (int k = 0; k < groupBound; k++) {
-//                    tempGroup.add((int)(neighborData[i][k][0]));
-//                }
-//
-//                System.out.println(Arrays.toString(tempGroup.toArray()));
-//                neighborGroups[i] = tempGroup;
-//            
-//            }
-//
-//            finalGroups = cullGroups(neighborGroups);
-//            if(finalGroups.size() == 8){
-//                break;
-//            }
-//            }
-////            System.out.println("n: " + n + " groups: " + finalGroups.size());
-//            //if (finalGroups.size() == 8) {
-//                System.out.println("%%%%%%%% final groups %%%%%%%%%%%%");
-//                for (ArrayList group : finalGroups) {
-//                    System.out.println(Arrays.toString(group.toArray()));
-//                }
-//           //}
-//
-//        
-        return neighborPairs;
+        
+ 
+        return finalGroups;
     }
 
     private ArrayList<ArrayList<Integer>> cullGroups(ArrayList<Integer>[] neighborGroups) {
@@ -659,7 +472,7 @@ public class ImageGame extends JPanel {
     }
 
     private BufferedImage squaresImage2(Square[][] squares) {
-        BufferedImage sqsImage = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
+        BufferedImage sqsImage = new BufferedImage(puzzleImg.getWidth(), puzzleImg.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g2 = sqsImage.createGraphics();
         for (Square[] row : squares) {
             for (Square square : row) {
@@ -673,7 +486,7 @@ public class ImageGame extends JPanel {
     }
 
     private BufferedImage squaresImage3(Square[][] squares) {
-        BufferedImage sqsImage = new BufferedImage(img.getWidth() * 2, img.getHeight() * 2, img.getType());
+        BufferedImage sqsImage = new BufferedImage(puzzleImg.getWidth() * 2, puzzleImg.getHeight() * 2, puzzleImg.getType());
 
         Graphics2D g2 = sqsImage.createGraphics();
         int n = 0;
@@ -741,13 +554,13 @@ public class ImageGame extends JPanel {
     }
 
     private BufferedImage roiMapImg(Square[][] squares) {
-        BufferedImage map = new BufferedImage(img.getWidth() * 2, img.getHeight() * 2, img.getType());
+        BufferedImage map = new BufferedImage(puzzleImg.getWidth() * 2, puzzleImg.getHeight() * 2, puzzleImg.getType());
 
         Graphics2D g2 = map.createGraphics();
         int n = 0;
         int x = 10;
         int y = 10;
-        int[][] neighborPairs = getNeighbors(squares);
+        
         
 
         for (Square[] row : squares) {
@@ -758,9 +571,6 @@ public class ImageGame extends JPanel {
                     x = ((n / 4) % 3) * 130;
                     y = (n / 12) * 150 + n % 4 * 35;
                     g2.drawImage(roiImg, x, y, this);
-                    g2.setColor(Color.GREEN);
-                    g2.setFont(g2.getFont().deriveFont(22));
-                    g2.drawString("" + n + " " + neighborPairs[n][1], x + 75, y + 10);
                     System.out.println(n);
                     n += 1;
 
@@ -925,7 +735,7 @@ public class ImageGame extends JPanel {
             rotatedEq[0] = 999;
         }
         double px = eq[1];
-        double py = img.getHeight();
+        double py = puzzleImg.getHeight();
         rotatedEq[1] = py - rotatedEq[0] * px;
         return rotatedEq;
     }
@@ -935,7 +745,7 @@ public class ImageGame extends JPanel {
         //initialize 2D array of squares 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                Square tempSquare = new Square(img);
+                Square tempSquare = new Square(puzzleImg);
                 squares[i][j] = tempSquare;
             }
         }
@@ -969,7 +779,8 @@ public class ImageGame extends JPanel {
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                squares[i][j].setEdgeParents(3 * i + j);//3*i + j becomes the square's idNum
+                squares[i][j].setEdgeParents();//3*i + j becomes the square's idNum
+                
             }
         }
 
@@ -981,8 +792,15 @@ public class ImageGame extends JPanel {
         //initialize 2D array of squares 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                Square tempSquare = new Square(img, corners[i][j]);
+                Square tempSquare = new Square(puzzleImg, corners[i][j]);
+                tempSquare.idNum = i*3+j;
                 squares[i][j] = tempSquare;
+            }
+        }
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                squares[i][j].setEdgeParents();//3*i + j becomes the square's idNum
+                setSquareImage(puzzleImg, squares[i][j]);
             }
         }
         return squares;
@@ -1354,6 +1172,6 @@ public class ImageGame extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.drawImage(processedImage, 20, 20, this);
-       g.drawImage(squaresBasedImage, img.getWidth() + 50, 20, this);
+       g.drawImage(solutionImage, puzzleImg.getWidth() + 50, 20, this);
     }
 }
