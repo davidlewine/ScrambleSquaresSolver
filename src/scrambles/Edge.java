@@ -24,6 +24,8 @@ public class Edge {
     public double[] cornerB;
     public RegionOI roi;
     public int[][] neighborInfo = new int[36][2];
+    public String value;
+    public String complementValue;
     
     
     public Edge(ArrayList<Pixel[]> ps){
