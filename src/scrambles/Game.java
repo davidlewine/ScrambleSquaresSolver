@@ -8,11 +8,12 @@ public class Game {
     int dim = 3;//gameboard dimension
     boolean solved = false;
     ArrayList<Tile> solution = new ArrayList<>();
-    ArrayList<Tile> puzzle = new ArrayList<>();
+    ArrayList<Tile> puzzle;
     ArrayList<String> wordHalves = new ArrayList<>(Arrays.asList("1", "2", "3", "4", "A", "B", "C", "D"));
    
 
     public Game() {
+        puzzle = new ArrayList<>();
         ArrayList<Tile> tempPuzzle = new ArrayList<>();
         for (int i = 0; i < dim * dim; i++) {
             tempPuzzle.add(new Tile(wordHalves));
@@ -36,34 +37,63 @@ public class Game {
         System.out.println("puzzle generated");
         printPuzzle(puzzle);
     }
+    
+    public Game(Square[][] squares) {
+        puzzle = new ArrayList<>();
+        for (Square[] row: squares){
+            for(Square square: row){
+                String[] edgeValues = new String[4];
+                for(int i = 0; i < 4; i++){
+                    edgeValues[i] = square.edges[i].value;
+                }
+                puzzle.add(new Tile(edgeValues, square.idNum));
+            }
+        }
+        
+        System.out.println("puzzle generated");
+        printPuzzle(puzzle);
+    }
 
     public void printPuzzle(ArrayList<Tile> p) {
         for (int i = 0; i < dim; i++) {
             for (int j = 0; j < dim; j++) {
+                if(i*dim+j<p.size()){
                 System.out.print("  " + p.get(i * dim + j).side(0) + "     ");
+                }
             }
             System.out.println();
             for (int j = 0; j < dim; j++) {
+                if(i*dim+j<p.size()){
                 System.out.print(p.get(i * dim + j).side(3) + "   " + p.get(i * dim + j).side(1) + "   ");
+                }
             }
             System.out.println();
             for (int j = 0; j < dim; j++) {
+                if(i*dim+j<p.size()){
                 System.out.print("  " + p.get(i * dim + j).side(2) + "     ");
+                }
             }
             System.out.println();
             System.out.println();
         }
     }
 
-    public void solve() {
+    public ArrayList<Tile> solve() {
         checkRemaining();
-        if(solved) System.out.println("puzzle solved");
-        printPuzzle(solution);
+        if(solved){
+            System.out.println("puzzle solved");
+            printPuzzle(solution);
+        }
+        else{
+            System.out.println("not solved");
+        }
+        return solution;
     }
 
     public void checkTile(int index){  //check if a puzzle tile fits in the next slot of the solution
         if (tileFits(solution, puzzle.get(index))) {
             solution.add(puzzle.get(index));
+            printPuzzle(solution);
             puzzle.remove(index);
             checkRemaining();//check if remaining tiles can be made to fit
             if (!solved) {//remaining tiles can't be made to fit; put tile back in puzzle
