@@ -42,5 +42,15 @@ public class Process {
     public static double eucDist(double[] p, double[] q){
         return Math.sqrt(Math.pow(p[0] - q[0], 2) + Math.pow(p[1] - q[1], 2));
     }
+    
+    public static BufferedImage rotate(BufferedImage img, double degrees) {
+        int w = img.getWidth();
+        int h = img.getHeight();
+        BufferedImage newImage = new BufferedImage(h, w, img.getType());
+        Graphics2D g2 = newImage.createGraphics();
+        g2.rotate(Math.toRadians(degrees), w / 2, h / 2);
+        g2.drawImage(img, null, 0, 0);
+        return newImage;
+    }
 
 }
