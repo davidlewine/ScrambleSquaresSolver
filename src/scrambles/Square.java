@@ -10,6 +10,7 @@ package scrambles;
  *
  * @author David
  */
+import java.awt.Graphics2D;
 import java.awt.image.*;
 
 public class Square {
@@ -34,12 +35,15 @@ public class Square {
         corners = cs;
         edges = edgesFromCorners(corners);
         
+        
     }
     
     private BufferedImage getSquareImage(){
         
         return new BufferedImage(5,5, puzzleImg.getType());
     }
+    
+    
     
     private Edge[] edgesFromCorners(double[][] corners){
         if(corners.length != 4) System.out.println("corners array doesn't have 4 elements");
@@ -57,14 +61,12 @@ public class Square {
         rotation = rotation + n;
     }
     
-    public void setEdgeParents(int id){
-        idNum = id;
+    public void setEdgeParents(){
         for(int i = 0; i < edges.length; i++){
             edges[i].parentSquare = this;
             edges[i].idNum = i;
             edges[i].squareNum = idNum;
-            edges[i].setPixelParents();
-            
+            //edges[i].setPixelParents();
         }
     }
     
