@@ -48,7 +48,7 @@ public class ImageGame extends JPanel {
 
         try {
             //puzzleImg = ImageIO.read(new File("teapot.PNG"));
-            puzzleImg = ImageIO.read(new File("turtles.jpg"));
+            puzzleImg = ImageIO.read(new File("roses.jpg"));
             //puzzleImg = ImageIO.read(new URL("http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg"));
             //String path = "http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg";
             //System.out.println(img.getType());
@@ -693,28 +693,28 @@ public class ImageGame extends JPanel {
             for (int j = 0; j < newHBorderEqs.size(); j++) {//for each equation, draw line
                 double[] eq = newHBorderEqs.get(j);
                 borderEqs.add(eq);
-                ArrayList<Pixel[]> newEdgePixelSets = new ArrayList();
-                for (int x = 0; x < dataStrips[i].length; x++) {//for each column or x coordinate in subImage
-                    int px = x + i * dataStrips[i].length;
-
-                    Pixel[] newPixelSet = new Pixel[pixelStripLength];
-                    //pixelSet is a row of 3 or so pixels along the y axis to store the pixel data 
-                    //from the first three or so rows in from the edge of the square.
-                    //for even values of j, i.e. top edges, use py + p, and for odd values of j,
-                    //i.e. for bottom edges, use py - p.
-                    for (int p = 0; p < pixelStripLength; p++) {
-                        int py = (int) (eq[0] * x + eq[1]) + (2 * (j % 2) - 1) * -p;
-                        int pixelColor = pImage.getRGB(px, py);
-                        //System.out.println("pixel color: " + pixelColor);
-                        Pixel newPixel = new Pixel(pixelColor, px, py);
-                        newPixelSet[p] = newPixel;
-                        //pImage.setRGB(x + i * dataStrips[i].length, (int) (eq[0] * x + eq[1]), 0xff << 16);
-                    }
-                    newEdgePixelSets.add(newPixelSet);
-                }
-                //edges is of type ArrayList<ArrayList<Pixel[]>>: 
-                //for each edge there is an array of pixelSets corresponding to each point on the edge
-                edges.add(newEdgePixelSets);
+//                ArrayList<Pixel[]> newEdgePixelSets = new ArrayList();
+//                for (int x = 0; x < dataStrips[i].length; x++) {//for each column or x coordinate in subImage
+//                    int px = x + i * dataStrips[i].length;
+//
+//                    Pixel[] newPixelSet = new Pixel[pixelStripLength];
+//                    //pixelSet is a row of 3 or so pixels along the y axis to store the pixel data 
+//                    //from the first three or so rows in from the edge of the square.
+//                    //for even values of j, i.e. top edges, use py + p, and for odd values of j,
+//                    //i.e. for bottom edges, use py - p.
+//                    for (int p = 0; p < pixelStripLength; p++) {
+//                        int py = (int) (eq[0] * x + eq[1]) + (2 * (j % 2) - 1) * -p;
+//                        int pixelColor = pImage.getRGB(px, py);
+//                        //System.out.println("pixel color: " + pixelColor);
+//                        Pixel newPixel = new Pixel(pixelColor, px, py);
+//                        newPixelSet[p] = newPixel;
+//                        //pImage.setRGB(x + i * dataStrips[i].length, (int) (eq[0] * x + eq[1]), 0xff << 16);
+//                    }
+//                    newEdgePixelSets.add(newPixelSet);
+//                }
+//                //edges is of type ArrayList<ArrayList<Pixel[]>>: 
+//                //for each edge there is an array of pixelSets corresponding to each point on the edge
+//                edges.add(newEdgePixelSets);
             }
         }
 
