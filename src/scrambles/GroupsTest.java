@@ -243,8 +243,8 @@ public class GroupsTest {
         double maxError = 0, minError = 1000, maxAngle = 0, minAngle = 1000, maxDiff = 0, minDiff = 1000;
         ArrayList<double[][]> scoreSets = new ArrayList();
         ArrayList<ArrayList<ArrayList<Integer>>> groupsSets = new ArrayList();
-        for (int mg = 7; mg < 12; mg++) {
-            //make a deep copy of groupsOrig
+        for (int mg = 4; mg < 12; mg++) {
+            //make new list groups that is a deep copy of groupsOrig
             ArrayList<ArrayList<Integer>> groups = new ArrayList();
             for (ArrayList<Integer> group : groupsOrig) {
                 ArrayList<Integer> groupCopy = new ArrayList();
@@ -255,6 +255,7 @@ public class GroupsTest {
             }
 
             while (groups.size() > 8) {
+                //find the nearest two groups
                 double minDist = 1000;
                 int minIndexA = -1;
                 int minIndexB = -1;
@@ -270,22 +271,28 @@ public class GroupsTest {
                         }
                     }
                 }
+                //merge the nearest two groups
                 (groups.get(minIndexA)).addAll(groups.get(minIndexB));
                 groups.remove(minIndexB);
             }
             //score this set of finalGroups
             double[][] scores = new double[groups.size()][4];//groups.size() should = 8 here.
-            double avgError = 0, avgAngle = 0, avgDiff = 0;
+            //double avgError = 0, avgAngle = 0, avgDiff = 0;
 
             //get raw scores for error, angle and difference
             for (int i = 0; i < groups.size(); i++) {
-                ArrayList<Integer> g = groups.get(i);
-                for (int n : g) {
+                double avgError = 0, avgAngle = 0, avgDiff = 0;
+                ArrayList<Integer> g = groups.get(i); //g is a group
+                for (int n : g) {//n is an edge in group g
                     double gnError = getError(sortedData[n], g.size(), 15);
+                        //g.size() is the size of the group the edge belongs to and indicates where the knee should be for
+                        // the sorted distance data for the edge.  g.size() should be the first element not included in the group.
                     double gnAngle = getAngle(sortedData[n], g.size(), 15);
-                    int fn = sortedData[n][g.size()][1];
-                    int ln = sortedData[n][g.size() - 1][1];
+                    int fn = sortedData[n][g.size()][1];//fn = distance of edge n to first edge (in sorted edge data) supposedly not in group 
+                    int ln = sortedData[n][g.size() - 1][1];// ln = distance of edge n to last edge (in sorted edge data) supposedly in group
                     double gnDiff = Math.abs(fn - ln);
+                        //if the group is a correct group, the difference in distances should be big because fn will be
+                        // the distance to an edge in a different group, and fl will be the distance to an edge (the most different) in the same group
                     if (gnError > maxError) {
                         maxError = gnError;
                     }
@@ -304,6 +311,7 @@ public class GroupsTest {
                     if (gnDiff < minDiff) {
                         minDiff = gnDiff;
                     }
+                    //gnError/Angle/Diff are scores representing how good the grouping is relative to edge n and its sorted data.
                     avgError += gnError;
                     avgAngle += gnAngle;
                     avgDiff += gnDiff;
@@ -314,18 +322,24 @@ public class GroupsTest {
                 scores[i][0] = avgDiff;
                 scores[i][1] = avgError;
                 scores[i][2] = avgAngle;
+                //scores has diff, error, and angle scores indicating an average of how good a grouping  group i is relative to each member of
+                //group i's sorted data of distances to other edges in group i.
             }
-            scoreSets.add(scores);
-            groupsSets.add(groups);
+            scoreSets.add(scores); //scoreSets contains a set of score data for each set of groups calcuated for 
+                                    //each different choice of maximum group size.  A set of score data is the average of the scores for each member of a group
+            groupsSets.add(groups);//groupsSets contains the corresponding set of groups
         }
-        //normalize and sum scores
+        //normalize scores (based on max and min score values) and sum the normalized scores 
+        //of each set of groups corresponding to a different maximum group size.
+        
         double maxTotalScore = 0;
         int indexOfBestGroupSet = -1;
 
-        for (int i = 0; i < groupsSets.size(); i++) {//for each set of final groups
+        for (int i = 0; i < groupsSets.size(); i++) {//for each set of final groups corresponding to a different max group size
             double[][] scoreSet = scoreSets.get(i);
             double totalScore = 0;
-            for (double[] s : scoreSet) {//for each group in the set
+            for (double[] s : scoreSet) {//for each group in the set, set item 3 in the score set to the sum of the normalized scores for
+                                         //error, angle, and diff held in items 0 - 2.
                 s[3] = (s[0] - minDiff) / (maxDiff - minDiff) + (1 - (s[1] - minError) / (maxError - minError))
                         + (1 - (s[2] - minAngle) / (maxAngle - minAngle));
                 totalScore += s[3];
