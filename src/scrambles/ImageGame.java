@@ -47,8 +47,8 @@ public class ImageGame extends JPanel {
     public ImageGame(){
 
         try {
-            //puzzleImg = ImageIO.read(new File("teapot.PNG"));
-            puzzleImg = ImageIO.read(new File("roses.jpg"));
+            puzzleImg = ImageIO.read(new File("teapot.PNG"));
+            //puzzleImg = ImageIO.read(new File("roses.jpg"));
             //puzzleImg = ImageIO.read(new URL("http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg"));
             //String path = "http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg";
             //System.out.println(img.getType());
