@@ -44,20 +44,20 @@ public class Zoomer implements Runnable {
     public Zoomer() {
 
 
-//        try {
-//            
-//            //img = ImageIO.read(new File("teapot.PNG"));
-//            String path = "http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg";
-//            //img = ImageIO.read(new File("aaron.JPG"));
-//            //System.out.println(img.getType());
-//            //img = ImageIO.read(new File("kittens.jpg"));
-//            //String path = "http://www.bendixens.com/mm5/graphics/00000001/scramhummingbirds.jpg";
-//            //String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
-//            //String path = "http://s5.thisnext.com/media/largest_dimension/Symphony-Scramble-Squares_5DECA6A5.jpg";
-//
-//            URL url = new URL(path);
-//            img = ImageIO.read(url);
-////            CannyEdgeDetector detector = new CannyEdgeDetector();
+        try {
+            
+            //img = ImageIO.read(new File("teapot.PNG"));
+            //String path = "http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg";
+            //img = ImageIO.read(new File("aaron.JPG"));
+            //System.out.println(img.getType());
+            //img = ImageIO.read(new File("kittens.jpg"));
+            //String path = "http://www.bendixens.com/mm5/graphics/00000001/scramhummingbirds.jpg";
+            String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
+            //String path = "http://s5.thisnext.com/media/largest_dimension/Symphony-Scramble-Squares_5DECA6A5.jpg";
+
+            URL url = new URL(path);
+            img = ImageIO.read(url);
+//            CannyEdgeDetector detector = new CannyEdgeDetector();
 ////     //adjust its parameters as desired
 ////       detector.setLowThreshold(0.5f);
 ////       detector.setHighThreshold(1f);
@@ -66,12 +66,12 @@ public class Zoomer implements Runnable {
 ////       detector.process();
 ////       img = detector.getEdgesImage();
 //            
-//            zoomImage = new BufferedImage((r * 2 + 1) * zoomFactor, (r * 2 + 1) * zoomFactor, img.getType());
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-        img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_RGB);
-        zoomImage = new BufferedImage((r * 2 + 1) * zoomFactor, (r * 2 + 1) * zoomFactor, img.getType());
+            zoomImage = new BufferedImage((r * 2 + 1) * zoomFactor, (r * 2 + 1) * zoomFactor, img.getType());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_RGB);
+        //zoomImage = new BufferedImage((r * 2 + 1) * zoomFactor, (r * 2 + 1) * zoomFactor, img.getType());
         SwingUtilities.invokeLater(this);
     }
     
