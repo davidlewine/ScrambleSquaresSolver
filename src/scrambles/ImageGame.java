@@ -22,6 +22,7 @@ public class ImageGame extends JPanel {
     int imgHeight, imgWidth;
 
     BufferedImage puzzleImg;
+    BufferedImage letNumImg;
     BufferedImage borderImage;
     BufferedImage hvBorderImage;
     BufferedImage rotatedImage;
@@ -39,26 +40,25 @@ public class ImageGame extends JPanel {
     ArrayList<ArrayList<Pixel[]>> edges = new ArrayList();//should be of sixe 36, with first 18 being horizontal edges and second 18 being vertical edges.
     ArrayList<Integer>[] neighborGroups = new ArrayList[36];
     double[][][] neighborData = new double[36][36][2];
-    Zoomer zoom = new Zoomer();
+    //Zoomer zoom = new Zoomer();
     String[] wordHalves = {"1", "2", "3", "4", "A", "B", "C", "D"};
     ArrayList<Tile> solution = new ArrayList();
-    
 
-    public ImageGame(){
+    public ImageGame() {
 
         try {
-            puzzleImg = ImageIO.read(new File("teapot.PNG"));
+            //puzzleImg = ImageIO.read(new File("teapot.PNG"));
             //puzzleImg = ImageIO.read(new File("roses.jpg"));
+            String path = "http://www.b-dazzle.com/store/pc/catalog/10020dolphins_75_detail.jpg";
             //puzzleImg = ImageIO.read(new URL("http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg"));
             //String path = "http://cdn.rainbowresource.netdna-cdn.com/products/010871.jpg";
-            //System.out.println(img.getType());
             //puzzleImg = ImageIO.read(new File("kittens.jpg"));
             //String path = "http://www.bendixens.com/mm5/graphics/00000001/scramhummingbirds.jpg";
             //String path = "http://www.theoriginalhorsetackcompany.com/images_products/bats-scramble-squares-8216big.jpg";
             //String path = "http://s5.thisnext.com/media/largest_dimension/Symphony-Scramble-Squares_5DECA6A5.jpg";
 
-            //URL url = new URL(path);
-            //puzzleImg = ImageIO.read(url);
+            URL url = new URL(path);
+            puzzleImg = ImageIO.read(url);
             imgWidth = puzzleImg.getWidth();
             imgHeight = puzzleImg.getHeight();
 
@@ -68,54 +68,61 @@ public class ImageGame extends JPanel {
             double[][] complements = getComplements(groups, squares);
             assignEdgeValues(squares, groups, complements);
             Game game = new Game(squares);
+            letNumImg = game.getLetNumImg();
             solution = game.solve();
             solutionImage = getSolutionImage(squares, solution);
-            
-            
-            
-            zoom.setImage(squaresBasedImage);
 
+            //zoom.setImage(squaresBasedImage);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
-    
-    private BufferedImage getSolutionImage(Square[][] squares, ArrayList<Tile> solution){
-        BufferedImage img = new BufferedImage((int)(puzzleImg.getWidth()+15), (int)(puzzleImg.getHeight()+15), puzzleImg.getType());
-        Graphics2D gImg = img.createGraphics();
-        for(int i = 0; i < 3; i++){
-            for(int j = 0; j < 3; j++){
-                Tile tile = solution.get(i*3+j);
-                BufferedImage tileImgUnrot = squares[tile.squareId/3][tile.squareId%3].squareImg;
-                BufferedImage tileImgRot = Process.rotate(tileImgUnrot, -90*tile.rotation);
-                gImg.drawImage(tileImgRot, null, j*img.getWidth()/3, i*img.getHeight()/3);
+
+    private BufferedImage getSolutionImage(Square[][] squares, ArrayList<Tile> solution) {
+        BufferedImage img = new BufferedImage(10, 10, puzzleImg.getType());
+        if (solution.size() == 9) {
+            img = new BufferedImage((int) (puzzleImg.getWidth() + 15), (int) (puzzleImg.getHeight() + 15), puzzleImg.getType());
+            Graphics2D gImg = img.createGraphics();
+
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    Tile tile = solution.get(i * 3 + j);
+                    BufferedImage tileImgUnrot = squares[tile.squareId / 3][tile.squareId % 3].squareImg;
+                    BufferedImage tileImgRot = Process.rotate(tileImgUnrot, -90 * tile.rotation);
+                    gImg.drawImage(tileImgRot, null, j * img.getWidth() / 3, i * img.getHeight() / 3);
+                }
             }
         }
+        else{
+           img = new BufferedImage(200, 50, puzzleImg.getType());
+           Graphics2D gImg = img.createGraphics(); 
+           gImg.drawString("Not Solvable", 20, 20);
+        }
         return img;
-        
+
     }
-    
-    private void setSquareImage(BufferedImage puzzleImg, Square square){
-        int w = (int)(square.corners[1][0] - square.corners[0][0]);
-        int h = (int)(square.corners[2][1] - square.corners[1][1]);
+
+    private void setSquareImage(BufferedImage puzzleImg, Square square) {
+        int w = (int) (square.corners[1][0] - square.corners[0][0]);
+        int h = (int) (square.corners[2][1] - square.corners[1][1]);
         BufferedImage img = new BufferedImage(w, h, puzzleImg.getType());
         Graphics2D g2 = img.createGraphics();
-        g2.drawImage(puzzleImg.getSubimage((int)square.corners[0][0], (int)square.corners[0][1], w, h),0, 0, this);
+        g2.drawImage(puzzleImg.getSubimage((int) square.corners[0][0], (int) square.corners[0][1], w, h), 0, 0, this);
         square.squareImg = img;
     }
 
-    private void assignEdgeValues(Square[][] squares, ArrayList<ArrayList<Integer>> groups, double[][] complements){
+    private void assignEdgeValues(Square[][] squares, ArrayList<ArrayList<Integer>> groups, double[][] complements) {
         //set each edge's value and complement value
-        for(Square[] row: squares){
-            for(Square square: row){
-                for(Edge edge: square.edges){
-                    int edgeNum = edge.squareNum*4 + edge.idNum;
-                    for(int i = 0; i < 4; i++){
-                        for(int j = 0; j<2; j++){
-                            if(groups.get((int)complements[i][j]).contains(edgeNum)){
-                                edge.value = wordHalves[j*4 + i];
-                                edge.complementValue = wordHalves[(1-j)*4 + i];
+        for (Square[] row : squares) {
+            for (Square square : row) {
+                for (Edge edge : square.edges) {
+                    int edgeNum = edge.squareNum * 4 + edge.idNum;
+                    for (int i = 0; i < 4; i++) {
+                        for (int j = 0; j < 2; j++) {
+                            if (groups.get((int) complements[i][j]).contains(edgeNum)) {
+                                edge.value = wordHalves[j * 4 + i];
+                                edge.complementValue = wordHalves[(1 - j) * 4 + i];
                             }
                         }
                     }
@@ -124,7 +131,6 @@ public class ImageGame extends JPanel {
             }
         }
     }
-
 
     private void countData(BufferedWriter bw, ArrayList<Pixel> pixelList) {
         try {
@@ -208,18 +214,17 @@ public class ImageGame extends JPanel {
             }
         }
         //create distInfo 2d array
-        System.out.println("&&&&&&&&& dist info &&&&&&&");
-        for(int p = 0; p < 36; p++){
-            for(int q = 0; q < 36; q++){
-                distInfo[p][q] = (int)neighborData[p][q][1];
-                System.out.print(distInfo[p][q] + ",");
+        ////System.out.println("&&&&&&&&& dist info &&&&&&&");
+        for (int p = 0; p < 36; p++) {
+            for (int q = 0; q < 36; q++) {
+                distInfo[p][q] = (int) neighborData[p][q][1];
+                //System.out.print(distInfo[p][q] + ",");
             }
-            System.out.println();
+            //System.out.println();
         }
-        System.out.println("&&&&&&&&& group info &&&&&&&");
+        //System.out.println("&&&&&&&&& group info &&&&&&&");
         ArrayList<ArrayList<Integer>> finalGroups = GroupsTest.getGroups(distInfo);
-        
- 
+
         return finalGroups;
     }
 
@@ -382,13 +387,13 @@ public class ImageGame extends JPanel {
                         minEdgeSD = edgeSD;
                         bestCorners = corners;
                     }
-                    System.out.println("" + edgeThresh + " " + consThresh + " " + edgeSD);
+                    //System.out.println("" + edgeThresh + " " + consThresh + " " + edgeSD);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
-        System.out.println("min sd: " + minEdgeSD);
+        //System.out.println("min sd: " + minEdgeSD);
 
         processedImage = cornerImage(img, bestCorners);
 
@@ -541,7 +546,7 @@ public class ImageGame extends JPanel {
                     g2.setColor(Color.GREEN);
                     g2.setFont(g2.getFont().deriveFont(22));
                     g2.drawString("" + n, x + 100, y + 10);
-                    System.out.println(n);
+                    //System.out.println(n);
                     n += 1;
 
 //                    Feature newRoiFeature = new Feature(newRoi);
@@ -560,8 +565,6 @@ public class ImageGame extends JPanel {
         int n = 0;
         int x = 10;
         int y = 10;
-        
-        
 
         for (Square[] row : squares) {
             for (Square square : row) {
@@ -571,7 +574,7 @@ public class ImageGame extends JPanel {
                     x = ((n / 4) % 3) * 130;
                     y = (n / 12) * 150 + n % 4 * 35;
                     g2.drawImage(roiImg, x, y, this);
-                    System.out.println(n);
+                    //System.out.println(n);
                     n += 1;
 
 //                    Feature newRoiFeature = new Feature(newRoi);
@@ -780,7 +783,7 @@ public class ImageGame extends JPanel {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 squares[i][j].setEdgeParents();//3*i + j becomes the square's idNum
-                
+
             }
         }
 
@@ -793,7 +796,7 @@ public class ImageGame extends JPanel {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 Square tempSquare = new Square(puzzleImg, corners[i][j]);
-                tempSquare.idNum = i*3+j;
+                tempSquare.idNum = i * 3 + j;
                 squares[i][j] = tempSquare;
             }
         }
@@ -1009,27 +1012,27 @@ public class ImageGame extends JPanel {
         g2.drawImage(img, null, 0, 0);
         return newImage;
     }
-    
-    public double[][] getComplements(ArrayList<ArrayList<Integer>> groups, Square[][] squares){
+
+    public double[][] getComplements(ArrayList<ArrayList<Integer>> groups, Square[][] squares) {
         //given array of 8 groups, return 4 complementary pairings.
         double[][] complements = new double[8][3];
         double[][] pairScores = new double[8][8];
-        for(int i = 0; i<groups.size(); i++){
-            for(int j = 0; j<groups.size(); j++){
+        for (int i = 0; i < groups.size(); i++) {
+            for (int j = 0; j < groups.size(); j++) {
                 //take lowest complement score for pairs of images in groups i and j
                 double minPairScore = 1000000;
-                for(int g1: groups.get(i)){
-                    int edge1 = g1%4;
-                    int row1 = g1/12;
-                    int col1 = (g1/4)%3;
-                    for(int g2: groups.get(j)){
-                        int edge2 = g2%4;
-                        int row2 = g2/12;
-                        int col2 = (g2/4)%3;
+                for (int g1 : groups.get(i)) {
+                    int edge1 = g1 % 4;
+                    int row1 = g1 / 12;
+                    int col1 = (g1 / 4) % 3;
+                    for (int g2 : groups.get(j)) {
+                        int edge2 = g2 % 4;
+                        int row2 = g2 / 12;
+                        int col2 = (g2 / 4) % 3;
                         BufferedImage img1 = squares[row1][col1].edges[edge1].roi.img;
                         BufferedImage img2 = squares[row2][col2].edges[edge2].roi.img;
-                        double pairScore = complementScore(img1,img2);
-                        if (pairScore < minPairScore){
+                        double pairScore = complementScore(img1, img2);
+                        if (pairScore < minPairScore) {
                             minPairScore = pairScore;
                         }
                     }
@@ -1038,25 +1041,25 @@ public class ImageGame extends JPanel {
             }
         }
         ArrayList<double[]> pairScoresArr = new ArrayList();
-        System.out.println("************ pairScores **********" );
+        //System.out.println("************ pairScores **********" );
         //load pairScoresArr with pairScores info
-        for(int i = 0; i < pairScores.length; i++){
-            for(int j = 0; j< pairScores.length; j++){
-                System.out.print("(" + i + ", " + j + ", " + pairScores[i][j] + ")");
+        for (int i = 0; i < pairScores.length; i++) {
+            for (int j = 0; j < pairScores.length; j++) {
+                //System.out.print("(" + i + ", " + j + ", " + pairScores[i][j] + ")");
                 double[] pairInfo = {i, j, pairScores[i][j]};
                 pairScoresArr.add(pairInfo);
             }
-            System.out.println();
+            //System.out.println();
         }
-        
-        for(int i = 0; i < 4; i++){
-            
+
+        for (int i = 0; i < 4; i++) {
+
             //look for lowest pair score
             double minScore = -1;
             double mini = -1;
             double minj = -1;
-            for(double[] scoreInfo: pairScoresArr){
-                if((scoreInfo[2] < minScore || minScore < 0)&& scoreInfo[0]!=scoreInfo[1]){
+            for (double[] scoreInfo : pairScoresArr) {
+                if ((scoreInfo[2] < minScore || minScore < 0) && scoreInfo[0] != scoreInfo[1]) {
                     minScore = scoreInfo[2];
                     mini = scoreInfo[0];
                     minj = scoreInfo[1];
@@ -1066,23 +1069,18 @@ public class ImageGame extends JPanel {
             complements[i][0] = mini;
             complements[i][1] = minj;
             complements[i][2] = minScore;
-            
+
             //remove all pairScores involving the two groups mini and minj from pairScoresArr
             Iterator iter = pairScoresArr.iterator();
-            while(iter.hasNext()){
-                double[] next = (double[])iter.next();
-                if(next[0] == mini || next[0] == minj || next[1] == mini || next[1] == minj){
+            while (iter.hasNext()) {
+                double[] next = (double[]) iter.next();
+                if (next[0] == mini || next[0] == minj || next[1] == mini || next[1] == minj) {
                     iter.remove();
                 }
             }
-            
+
         }
-        
-        
-        
-        
-        
-        
+
 //        for(int i = 0; i<pairScores.length - 1; i++){
 //            double minScore = -1;
 //            int complement = -1;
@@ -1096,21 +1094,21 @@ public class ImageGame extends JPanel {
 //            complements[i][1] = complement;
 //            complements[i][2] = minScore;
 //        }
-     System.out.println("***********  complement pairs  ***********");
-     for(double[] pair: complements){
-         System.out.println(Arrays.toString(pair));
-     }
-     return complements;  
+        //System.out.println("***********  complement pairs  ***********");
+        for (double[] pair : complements) {
+            //System.out.println(Arrays.toString(pair));
+        }
+        return complements;
     }
-    
-    public double complementScore(BufferedImage img1, BufferedImage img2){
+
+    public double complementScore(BufferedImage img1, BufferedImage img2) {
         double score = 0, minScore = 100000;
         int img1o, img1c, img1x, img2o, img2c, img2x, rMax, img1r, img2r;
-        rMax = (Math.min(img1.getWidth(), img2.getWidth()))/4;
-        img1r = img1.getWidth()/2;
-        img2r = img2.getWidth()/2;
+        rMax = (Math.min(img1.getWidth(), img2.getWidth())) / 4;
+        img1r = img1.getWidth() / 2;
+        img2r = img2.getWidth() / 2;
         int r = -rMax;
-        while(r <= rMax){
+        while (r <= rMax) {
 //            
 //            pairImage = new BufferedImage(img1.getWidth()*4, img1.getHeight()* 4, img1.getType());
 //            Graphics2D gPairImg = pairImage.createGraphics(); 
@@ -1120,33 +1118,33 @@ public class ImageGame extends JPanel {
 //            gPairImg.drawImage(img1, 50, 21 + img2.getHeight(), this);
 //            repaint();
             //zoom.setImage(pairImage);
-            
+
             score = 0;
             int img1Start = Math.max(0, img1r + r - img2r);
-            int img1End = Math.min(img1.getWidth()-1, img1r + (img2r + r));
+            int img1End = Math.min(img1.getWidth() - 1, img1r + (img2r + r));
             int img2End = Math.max(0, img2r + r - img1r);
-            int img2Start = Math.min(img2.getWidth()-1, img2r + (img1r + r));
-            for(int i = 0; i < Math.min(img1End-img1Start,img2Start - img2End); i++){
+            int img2Start = Math.min(img2.getWidth() - 1, img2r + (img1r + r));
+            for (int i = 0; i < Math.min(img1End - img1Start, img2Start - img2End); i++) {
                 double pixScore = hEdgeScore(img1.getRGB(img1Start + i, 0), img2.getRGB(img2Start - i, 0));
                 score += pixScore;
             }
-            if(score < minScore){
+            if (score < minScore) {
                 minScore = score;
             }
-          r++; 
-          
+            r++;
+
         }
         return minScore;
     }
-    
-    public double hEdgeScore(int p1, int p2){
+
+    public double hEdgeScore(int p1, int p2) {
         double score = 0;
         int[] rgb1 = Process.sepColors(p1);
         int[] rgb2 = Process.sepColors(p2);
 //        System.out.print("pix Info: ");
 //        System.out.print(Arrays.toString(rgb1));
 //        System.out.println(Arrays.toString(rgb2));
-        for(int i = 0; i < 3; i++){
+        for (int i = 0; i < 3; i++) {
             score += Math.abs(rgb1[i] - rgb2[i]);
         }
         return score;
@@ -1172,6 +1170,7 @@ public class ImageGame extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.drawImage(processedImage, 20, 20, this);
-       g.drawImage(solutionImage, puzzleImg.getWidth() + 50, 20, this);
+        g.drawImage(letNumImg, puzzleImg.getWidth() + 50, 20, this);
+        g.drawImage(solutionImage, 20, processedImage.getHeight() + 20, this);
     }
 }

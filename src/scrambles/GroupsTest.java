@@ -58,9 +58,9 @@ public class GroupsTest {
                 }
             }
 
-            System.out.println("*********  distInfo  **********");
+            //System.out.println("*********  distInfo  **********");
             for (int[] arr : distInfo) {
-                System.out.println(Arrays.toString(arr));
+                //System.out.println(Arrays.toString(arr));
             }
 
             br.close();
@@ -150,15 +150,15 @@ public class GroupsTest {
             for (int k = 0; k < maxIndex; k++) {
                 group.add(lineData[k][0]);
             }
-            System.out.println("group size: " + group.size());
-            System.out.println("group: " + Arrays.toString(group.toArray()));
+            //System.out.println("group size: " + group.size());
+            //System.out.println("group: " + Arrays.toString(group.toArray()));
             lineGroups[d] = group;
         }
 
-        System.out.println("lineGroups length: " + lineGroups.length);
-        System.out.println("******************");
+        //System.out.println("lineGroups length: " + lineGroups.length);
+        //System.out.println("******************");
         for (ArrayList g : lineGroups) {
-            System.out.println(Arrays.toString(g.toArray()));
+            //System.out.println(Arrays.toString(g.toArray()));
         }
 
         return lineGroups;
@@ -202,9 +202,9 @@ public class GroupsTest {
             }
 
         }
-        System.out.println("possibleGroups");
+        //System.out.println("possibleGroups");
         for (ArrayList pg : possibleGroups) {
-            System.out.println(Arrays.toString(pg.toArray()));
+            //System.out.println(Arrays.toString(pg.toArray()));
         }
         return possibleGroups;
     }
@@ -229,9 +229,9 @@ public class GroupsTest {
                 iter.remove();
             }
         }
-        System.out.println("allGroups");
+        //System.out.println("allGroups");
         for (ArrayList pg : possGroups) {
-            System.out.println(Arrays.toString(pg.toArray()));
+            //System.out.println(Arrays.toString(pg.toArray()));
         }
         return possGroups;
     }
@@ -351,9 +351,9 @@ public class GroupsTest {
         }
         ArrayList<ArrayList<Integer>> bestGroupSet = groupsSets.get(indexOfBestGroupSet);
 
-        System.out.println("finalGroups");
+        //System.out.println("finalGroups");
         for (ArrayList g : bestGroupSet) {
-            System.out.println(Arrays.toString(g.toArray()));
+            //System.out.println(Arrays.toString(g.toArray()));
         }
         return bestGroupSet;
     }

@@ -1,5 +1,9 @@
 package scrambles;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import static java.awt.image.BufferedImage.TYPE_INT_RGB;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -10,6 +14,7 @@ public class Game {
     ArrayList<Tile> solution = new ArrayList<>();
     ArrayList<Tile> puzzle;
     ArrayList<String> wordHalves = new ArrayList<>(Arrays.asList("1", "2", "3", "4", "A", "B", "C", "D"));
+    BufferedImage letNumImg;
    
 
     public Game() {
@@ -35,7 +40,7 @@ public class Game {
             tempPuzzle.remove(r);
         }
         System.out.println("puzzle generated");
-        printPuzzle(puzzle);
+        letNumImg = printPuzzle(puzzle);
     }
     
     public Game(Square[][] squares) {
@@ -51,31 +56,71 @@ public class Game {
         }
         
         System.out.println("puzzle generated");
-        printPuzzle(puzzle);
+        letNumImg = printPuzzle(puzzle);
+       
+    }
+    public BufferedImage getLetNumImg(){
+        return letNumImg;
     }
 
-    public void printPuzzle(ArrayList<Tile> p) {
+    public BufferedImage printPuzzle(ArrayList<Tile> p) {
+        int tileDim = 50, tileBuffer = 30;
+        BufferedImage img = new BufferedImage(3*tileDim + 4*tileBuffer, 3*tileDim + 4*tileBuffer, TYPE_INT_RGB);
+        Graphics2D g = img.createGraphics();
+        g.setColor(Color.white);
+        g.fillRect(0,0, img.getWidth(), img.getHeight());
+        g.setColor(Color.gray);
+        int startX = tileBuffer;
+        int startY = tileBuffer;
+        int x = startX - tileBuffer/4;
+        int y = startY - tileBuffer/2;
+        for (int i = 0; i < dim; i++) {
+            for (int j = 0; j < dim; j++) {
+                g.fillRect(x, y, tileDim + (3*tileBuffer)/4, tileDim + (3*tileBuffer)/4);
+                x+= tileDim + tileBuffer;
+            }
+            x = startX-tileBuffer/5; 
+            y+= tileDim + tileBuffer;
+        }
+        g.setColor(Color.white);   
+        x = startX + tileDim/2;
+        y = startY;
         for (int i = 0; i < dim; i++) {
             for (int j = 0; j < dim; j++) {
                 if(i*dim+j<p.size()){
                 System.out.print("  " + p.get(i * dim + j).side(0) + "     ");
+                g.drawString("" + p.get(i * dim + j).side(0), x, y);
+                x+= tileDim + tileBuffer;
                 }
             }
             System.out.println();
+            y+= tileDim/2;
+            x = startX;
             for (int j = 0; j < dim; j++) {
                 if(i*dim+j<p.size()){
                 System.out.print(p.get(i * dim + j).side(3) + "   " + p.get(i * dim + j).side(1) + "   ");
+                g.drawString("" + p.get(i * dim + j).side(3), x, y);
+                x+= tileDim;
+                g.drawString("" + p.get(i * dim + j).side(1), x, y);
+                x+= tileBuffer;
                 }
             }
             System.out.println();
+            y+= tileDim/2;
+            x = startX + tileDim/2;
             for (int j = 0; j < dim; j++) {
                 if(i*dim+j<p.size()){
                 System.out.print("  " + p.get(i * dim + j).side(2) + "     ");
+                g.drawString("" + p.get(i * dim + j).side(2), x, y);
+                x+= tileDim + tileBuffer;
                 }
             }
             System.out.println();
             System.out.println();
+            y+= tileBuffer;
+            x = startX + tileDim/2;
         }
+        return img;
     }
 
     public ArrayList<Tile> solve() {
@@ -86,6 +131,7 @@ public class Game {
         }
         else{
             System.out.println("not solved");
+            printPuzzle(solution);
         }
         return solution;
     }
@@ -93,7 +139,7 @@ public class Game {
     public void checkTile(int index){  //check if a puzzle tile fits in the next slot of the solution
         if (tileFits(solution, puzzle.get(index))) {
             solution.add(puzzle.get(index));
-            printPuzzle(solution);
+            //printPuzzle(solution);
             puzzle.remove(index);
             checkRemaining();//check if remaining tiles can be made to fit
             if (!solved) {//remaining tiles can't be made to fit; put tile back in puzzle

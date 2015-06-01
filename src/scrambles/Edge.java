@@ -108,7 +108,7 @@ public class Edge {
         double threshold = 1.5;
         int maxRowCount = 9;
 
-        System.out.print("edge sds: ");
+        //System.out.print("edge sds: ");
         double[] sds = new double[maxRowCount];
         double medianSd;
         double sdSd;
@@ -131,10 +131,10 @@ public class Edge {
         sdSd = (new DescriptiveStatistics(sds)).getStandardDeviation();
         medianSd = (new DescriptiveStatistics(sds)).getPercentile(50);
         for(double sd: sds){
-            System.out.print("" + sd + " " + (medianSd/sd) + ", ");
+            //System.out.print("" + sd + " " + (medianSd/sd) + ", ");
         }
-        System.out.println();
-        System.out.println();
+        //System.out.println();
+        //System.out.println();
         
         int sdsIndex = 0;
         while(medianSd/sds[sdsIndex] > threshold){
